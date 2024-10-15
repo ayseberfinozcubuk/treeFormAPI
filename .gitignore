@@ -1,0 +1,39 @@
+# Ignore build output
+bin/
+obj/
+
+# Ignore user-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Ignore Rider IDE files
+.idea/
+*.sln.iml
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore database and log files
+*.log
+*.sql
+*.sqlite
+
+# Ignore temporary files
+*.tmp
+*.bak
+*.swp
+
+# Ignore package dependencies
+packages/
+*.nupkg
+
+# Ignore app settings files that contain secrets
+appsettings.*.json
+!appsettings.json
+
+# Ignore publish output
+publish/
+
+need-for-development.txt
