@@ -1,32 +1,38 @@
-using MongoDB.Driver;
+using tree_form_API.Models;
+using tree_form_API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
-builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
-
-// Add MongoDB client to the services
-builder.Services.AddSingleton<IMongoClient>(s =>
+// Add CORS policy to allow requests from localhost:3000
+builder.Services.AddCors(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("MongoDb");
-    return new MongoClient(connectionString);
+    options.AddPolicy("AllowReactApp",
+        builder => builder.WithOrigins("http://localhost:3000")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
 });
 
-// Add EmitterRepository to the services
-builder.Services.AddSingleton<EmitterRepository>();
+builder.Services.Configure<EmitterDatabaseSettings>(
+    builder.Configuration.GetSection("EmitterDatabase"));
+
+builder.Services.AddSingleton<EmitterService>();
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Emitters API v1"));
+    app.UseSwaggerUI();
 }
 
+// Apply the CORS policy
+app.UseCors("AllowReactApp");
+
 app.UseHttpsRedirection();
-app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

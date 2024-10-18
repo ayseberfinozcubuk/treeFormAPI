@@ -1,39 +1,30 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
-using System.IO;
-using System.Threading.Tasks;
+using tree_form_API.Dtos;
+using tree_form_API.Models;
+using tree_form_API.Services;
 
-[ApiController]
-[Route("api/[controller]")]
-public class EmittersController : ControllerBase
+namespace tree_form_API.Controllers
 {
-    private readonly EmitterRepository _emitterRepository;
-
-    public EmittersController(EmitterRepository emitterRepository)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class EmitterController : ControllerBase
     {
-        _emitterRepository = emitterRepository;
-    }
+        private readonly EmitterService _emitterService;
+        private readonly IMapper _mapper;
 
-    [HttpPost("upload-json")]
-    public async Task<IActionResult> UploadEmitterJson(IFormFile file)
-    {
-        if (file == null || file.Length == 0)
+        public EmitterController(EmitterService emitterService, IMapper mapper)
         {
-            return BadRequest("Please upload a valid JSON file.");
+            _emitterService = emitterService;
+            _mapper = mapper;
         }
 
-        using (var streamReader = new StreamReader(file.OpenReadStream()))
+        [HttpPost]
+        public async Task<IActionResult> Create(EmitterDto emitterDto)
         {
-            // Read file content as JSON string
-            var jsonString = await streamReader.ReadToEndAsync();
-
-            // Convert the JSON string into a BsonDocument
-            var bsonDocument = BsonDocument.Parse(jsonString);
-
-            // Insert the BsonDocument into MongoDB
-            await _emitterRepository.CreateEmitterAsync(bsonDocument);
+            var emitter = _mapper.Map<Emitter>(emitterDto); // Map DTO to Domain
+            await _emitterService.CreateAsync(emitter);
+            return CreatedAtAction(nameof(Create), new { id = emitter.Id }, emitterDto);
         }
-
-        return Ok(new { message = "Emitter JSON uploaded and stored successfully!" });
     }
 }
