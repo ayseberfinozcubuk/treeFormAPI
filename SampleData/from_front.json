@@ -1,0 +1,85 @@
+{
+  "Notation": "a",
+  "EmitterName": "a",
+  "SpotNo": "1",
+  "Function": "1",
+  "NumberOfModes": "1",
+  "Modes": [
+    {
+      "ModeName": "1",
+      "Amplitude": "1",
+      "TheoricalRange": "1",
+      "Beams": [
+        {
+          "BeamName": "1",
+          "AntennaGain": "1",
+          "BeamPosition": "1",
+          "BeamWidthAzimute": "1",
+          "BeamWidthElevation": "4",
+          "Sequences": [
+            {
+              "SequenceName": "1",
+              "FiringOrders": [
+                {
+                  "BeamPositionOrderIndex": "1",
+                  "BeamPositionIndex": "1",
+                  "BeamPositionDuration": "1",
+                  "Azimuth": "1",
+                  "Elevation": "1"
+                },
+                {
+                  "BeamPositionOrderIndex": "1",
+                  "BeamPositionIndex": "1",
+                  "BeamPositionDuration": "1",
+                  "Elevation": "1",
+                  "Azimuth": "0"
+                }
+              ]
+            },
+            {
+              "SequenceName": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ModeName": "1",
+      "Amplitude": "1",
+      "TheoricalRange": "1",
+      "Beams": [
+        {
+          "BeamName": "1",
+          "AntennaGain": "1",
+          "BeamPosition": "1",
+          "BeamWidthAzimute": "1",
+          "BeamWidthElevation": "1",
+          "DwellDurationValues": [
+            {
+              "BeamWPositionDuration": "1",
+              "BeamWPositionIndex": "1"
+            },
+            {
+              "BeamWPositionDuration": "1",
+              "BeamWPositionIndex": "1"
+            }
+          ],
+          "Sequences": [
+            {
+              "SequenceName": "1",
+              "FiringOrders": [
+                {
+                  "BeamPositionOrderIndex": "1",
+                  "BeamPositionIndex": "1",
+                  "BeamPositionDuration": "1",
+                  "Elevation": "1",
+                  "Azimuth": "1"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

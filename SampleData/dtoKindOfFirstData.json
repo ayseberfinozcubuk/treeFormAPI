@@ -1,0 +1,299 @@
+[
+  {
+    "EntityName": "Emitter",
+    "Properties": [
+      {
+        "Name": "Id",
+        "Label": "",
+        "Type": "Guid",
+        "IsMandatory": true
+      },
+      {
+        "Name": "Notation",
+        "Label": "Notasyon",
+        "Type": "string",
+        "IsMandatory": true
+      },
+      {
+        "Name": "EmitterName",
+        "Label": "Emiter Adı",
+        "Type": "string",
+        "IsMandatory": true
+      },
+      {
+        "Name": "SpotNo",
+        "Label": "Spot  No",
+        "Type": "string",
+        "IsMandatory": false
+      },
+      {
+        "Name": "Function",
+        "Label": "Görev Kodu",
+        "Type": "string",
+        "IsMandatory": false
+      },
+      {
+        "Name": "NumberOfModes",
+        "Label": "Mod Sayısı",
+        "Type": "int",
+        "IsMandatory": false
+      },
+      {
+        "Name": "Modes",
+        "Label": "Emiter Mod Listesi",
+        "Type": "list",
+        "ListType": "EmitterMode"
+      }
+    ]
+  },
+  {
+    "EntityName": "EmitterMode",
+    "Properties": [
+      {
+        "Name": "Id",
+        "Label": "",
+        "Type": "Guid"
+      },
+      {
+        "Name": "EmitterId",
+        "Label": "",
+        "Type": "Guid"
+      },
+      {
+        "Name": "ModeName",
+        "Label": "Mode Adı",
+        "Type": "string",
+        "IsMandatory": true
+      },
+      {
+        "Name": "Amplitude",
+        "Label": "Genlik",
+        "Type": "double",
+        "Unit": "minivolt",
+        "MinMax": {
+          "Min": 0,
+          "Max": 1000000
+        },
+        "IsMandatory": false
+      },
+      {
+        "Name": "TheoricalRange",
+        "Label": "Teorik Menzil",
+        "Type": "double",
+        "Unit": "km",
+        "MinMax": {
+          "Min": 0,
+          "Max": 1000000
+        },
+        "IsMandatory": false
+      },
+      {
+        "Name": "Beams",
+        "Label": "Emiter Mod Hüzme Listesi",
+        "Type": "list",
+        "ListType": "EmitterModeBeam"
+      }
+    ]
+  },
+  {
+    "EntityName": "EmitterModeBeam",
+    "Properties": [
+      {
+        "Name": "Id",
+        "Label": "",
+        "Type": "Guid"
+      },
+      {
+        "Name": "EmitterId",
+        "Label": "",
+        "Type": "Guid"
+      },
+      {
+        "Name": "BeamName",
+        "Label": "Beam Adı",
+        "Type": "string",
+        "IsMandatory": true
+      },
+      {
+        "Name": "AntennaGain",
+        "Label": "Anten Kazancı",
+        "Type": "double",
+        "Unit": "dbi",
+        "MinMax": {
+          "Min": 0,
+          "Max": 100
+        },
+        "IsMandatory": false
+      },
+      {
+        "Name": "BeamPosition",
+        "Label": "Hüzme Pozisyonu",
+        "Type": "double",
+        "Unit": "degree",
+        "MinMax": {
+          "Min": -180,
+          "Max": 180
+        },
+        "IsMandatory": false
+      },
+      {
+        "Name": "BeamWidthAzimute",
+        "Label": "Hüzme Genişliği Yatay",
+        "Type": "double",
+        "Unit": "degree",
+        "MinMax": {
+          "Min": 0,
+          "Max": 360
+        },
+        "IsMandatory": false
+      },
+      {
+        "Name": "BeamWidthElevation",
+        "Label": "Hüzme Genişliği Dikey",
+        "Type": "double",
+        "Unit": "degree",
+        "MinMax": {
+          "Min": 0,
+          "Max": 360
+        },
+        "IsMandatory": false
+      },
+      {
+        "Name": "DwellDurationValues",
+        "Label": "Ayrık Değer Listesi",
+        "Type": "list",
+        "ListType": "EmitterModeBeamPositionDwellDurationValue"
+      },
+      {
+        "Name": "Sequences",
+        "Label": "Parametre Dizi Listesi",
+        "Type": "list",
+        "ListType": "EmitterModeBeamPositionSequence"
+      }
+    ]
+  },
+  {
+    "EntityName": "EmitterModeBeamPositionDwellDurationValue",
+    "Properties": [
+      {
+        "Name": "Id",
+        "Label": "",
+        "Type": "Guid"
+      },
+      {
+        "Name": "EmitterModeBeamId",
+        "Label": "",
+        "Type": "Guid"
+      },
+      {
+        "Name": "BeamWPositionDuration",
+        "Label": "Hüzme Pozisyonu Kalış Süresi",
+        "Type": "double",
+        "Unit": "ms",
+        "MinMax": {
+          "Min": 0,
+          "Max": 10000
+        },
+        "IsMandatory": false
+      },
+      {
+        "Name": "BeamWPositionIndex",
+        "Label": "Sıra No",
+        "Type": "int",
+        "IsMandatory": true
+      }
+    ]
+  },
+  {
+    "EntityName": "EmitterModeBeamPositionSequence",
+    "Properties": [
+      {
+        "Name": "Id",
+        "Label": "",
+        "Type": "Guid"
+      },
+      {
+        "Name": "EmitterModeBeamId",
+        "Label": "",
+        "Type": "Guid"
+      },
+      {
+        "Name": "SequenceName",
+        "Label": "Parametre Dizisi Adı",
+        "Type": "string",
+        "IsMandatory": false
+      },
+      {
+        "Name": "FiringOrders",
+        "Label": "Dizi Elemanı Listesi",
+        "Type": "list",
+        "ListType": "EmitterModeBeamPositionFiringOrder"
+      }
+    ]
+  },
+  {
+    "EntityName": "EmitterModeBeamPositionFiringOrder",
+    "Properties": [
+      {
+        "Name": "Id",
+        "Label": "",
+        "Type": "Guid"
+      },
+      {
+        "Name": "EmitterModeBeamPositionSequenceId",
+        "Label": "",
+        "Type": "Guid"
+      },
+      {
+        "Name": "BeamPositionOrderIndex",
+        "Label": "Gönderim Sıra No",
+        "Type": "int",
+        "IsMandatory": true,
+        "MinMax": {
+          "Min": 0,
+          "Max": 10000
+        }
+      },
+      {
+        "Name": "BeamPositionIndex",
+        "Label": "Hüzme Ayrık Pozisyonu Sıra No",
+        "Type": "int",
+        "IsMandatory": true,
+        "MinMax": {
+          "Min": 0,
+          "Max": 10000
+        }
+      },
+      {
+        "Name": "BeamPositionDuration",
+        "Label": "Hüzme Pozisyonu Kalış Süresi",
+        "Type": "int",
+        "IsMandatory": true,
+        "MinMax": {
+          "Min": 0,
+          "Max": 10000
+        }
+      },
+      {
+        "Name": "Elevation",
+        "Label": "Dikey Açı",
+        "Type": "double",
+        "IsMandatory": false,
+        "MinMax": {
+          "Min": -90,
+          "Max": 90
+        }
+      },
+      {
+        "Name": "Azimuth",
+        "Label": "Yatay Açı",
+        "Type": "double",
+        "IsMandatory": false,
+        "MinMax": {
+          "Min": -180,
+          "Max": 180
+        }
+      }
+    ]
+  }
+]
