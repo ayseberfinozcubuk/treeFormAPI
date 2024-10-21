@@ -23,4 +23,8 @@ public class EmitterService
         // Insert Emitter into MongoDB
         await _emitterCollection.InsertOneAsync(newEmitter);
     }
+
+    public async Task<List<Emitter>> GetAllAsync() =>
+        await _emitterCollection.Find(_ => true).ToListAsync();
+
 }

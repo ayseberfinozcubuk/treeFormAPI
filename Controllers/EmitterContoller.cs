@@ -16,6 +16,14 @@ public class EmitterController : ControllerBase
         _emitterService = emitterService;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetAllEmitters()
+    {
+        var emitters = await _emitterService.GetAllAsync();
+        var emittersDto = _mapper.Map<List<EmitterDto>>(emitters);
+        return Ok(emittersDto);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(EmitterDto emitterDto)
     {
@@ -65,5 +73,4 @@ public class EmitterController : ControllerBase
             }
         }
     }
-
 }
