@@ -27,42 +27,43 @@ public class EmitterController : ControllerBase
         // Map DTO to domain model
         var emitter = _mapper.Map<Emitter>(emitterDto);
 
-        // Generate new Id for Emitter and nested entities
-        emitter.Id = Guid.NewGuid();
-
-        foreach (var mode in emitter.Modes)
-        {
-            mode.Id = Guid.NewGuid();
-            mode.EmitterId = emitter.Id;
-
-            foreach (var beam in mode.Beams)
-            {
-                beam.Id = Guid.NewGuid();
-                beam.EmitterModeId = mode.Id;
-
-                foreach (var dwell in beam.DwellDurationValues)
-                {
-                    dwell.Id = Guid.NewGuid();
-                    dwell.EmitterModeBeamId = beam.Id;
-                }
-
-                foreach (var sequence in beam.Sequences)
-                {
-                    sequence.Id = Guid.NewGuid();
-                    sequence.EmitterModeBeamId = beam.Id;
-
-                    foreach (var firingOrder in sequence.FiringOrders)
-                    {
-                        firingOrder.Id = Guid.NewGuid();
-                        firingOrder.EmitterModeBeamPositionSequenceId = sequence.Id;
-                    }
-                }
-            }
-        }
+        // Assign new Ids generically to Emitter and its nested entities
+        AssignIdsGeneric(emitter);
 
         // Save to database
         await _emitterService.CreateAsync(emitter);
 
         return CreatedAtAction(nameof(Create), new { id = emitter.Id }, emitterDto);
     }
+
+    // Generic method to assign Ids to Emitter and nested entities
+    private void AssignIdsGeneric<T>(T entity)
+    {
+        if (entity == null) return;
+
+        // Check if the entity has an Id property and assign a new Guid
+        var idProperty = entity.GetType().GetProperty("Id");
+        if (idProperty != null && idProperty.PropertyType == typeof(Guid))
+        {
+            idProperty.SetValue(entity, Guid.NewGuid());
+        }
+
+        // Iterate over all properties of the entity
+        foreach (var property in entity.GetType().GetProperties())
+        {
+            if (typeof(IEnumerable<object>).IsAssignableFrom(property.PropertyType) && property.PropertyType != typeof(string))
+            {
+                // Recursively assign Ids for each item in the list
+                var items = property.GetValue(entity) as IEnumerable<object>;
+                if (items != null)
+                {
+                    foreach (var item in items)
+                    {
+                        AssignIdsGeneric(item);  // Recursive call for nested entities
+                    }
+                }
+            }
+        }
+    }
+
 }
