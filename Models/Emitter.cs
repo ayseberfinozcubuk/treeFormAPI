@@ -35,7 +35,7 @@ namespace tree_form_API.Models
         [BsonId]
         public Guid Id { get; set; }
 
-        public Guid EmitterId { get; set; }
+        public Guid EmitterModeId { get; set; }
         public string BeamName { get; set; } = string.Empty;
         public double? AntennaGain { get; set; }
         public double? BeamPosition { get; set; }

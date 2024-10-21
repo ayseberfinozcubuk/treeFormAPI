@@ -13,13 +13,14 @@ public class EmitterService
         _emitterCollection = mongoDatabase.GetCollection<Emitter>(emitterDatabaseSettings.Value.CollectionName);
     }
 
-    public async Task CreateAsync(Emitter? newEmitter)
+    public async Task CreateAsync(Emitter newEmitter)
     {
         if (newEmitter == null)
         {
             throw new ArgumentNullException(nameof(newEmitter), "Emitter cannot be null.");
         }
 
+        // Insert Emitter into MongoDB
         await _emitterCollection.InsertOneAsync(newEmitter);
     }
 }
