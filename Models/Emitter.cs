@@ -8,7 +8,6 @@ namespace tree_form_API.Models
     public class Emitter
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         public Guid Id { get; set; }
 
         public string Notation { get; set; } = string.Empty;
@@ -22,7 +21,6 @@ namespace tree_form_API.Models
     public class EmitterMode
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         public Guid Id { get; set; }
 
         public Guid EmitterId { get; set; }
@@ -35,7 +33,6 @@ namespace tree_form_API.Models
     public class EmitterModeBeam
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         public Guid Id { get; set; }
 
         public Guid EmitterId { get; set; }
@@ -51,7 +48,6 @@ namespace tree_form_API.Models
     public class EmitterModeBeamPositionDwellDurationValue
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         public Guid Id { get; set; }
 
         public Guid EmitterModeBeamId { get; set; }
@@ -62,7 +58,6 @@ namespace tree_form_API.Models
     public class EmitterModeBeamPositionSequence
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         public Guid Id { get; set; }
 
         public Guid EmitterModeBeamId { get; set; }
@@ -73,7 +68,6 @@ namespace tree_form_API.Models
     public class EmitterModeBeamPositionFiringOrder
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         public Guid Id { get; set; }
 
         public Guid EmitterModeBeamPositionSequenceId { get; set; }

@@ -9,7 +9,7 @@ namespace tree_form_API.Dtos
         public string? SpotNo { get; set; }
         public string? Function { get; set; }
         public int? NumberOfModes { get; set; }
-        public List<EmitterModeDto> Modes { get; set; } = new List<EmitterModeDto>();
+        public List<EmitterModeDto>? Modes { get; set; } = new List<EmitterModeDto>();
     }
 
     public class EmitterModeDto
@@ -17,7 +17,7 @@ namespace tree_form_API.Dtos
         public string ModeName { get; set; } = string.Empty;
         public double? Amplitude { get; set; }
         public double? TheoricalRange { get; set; }
-        public List<EmitterModeBeamDto> Beams { get; set; } = new List<EmitterModeBeamDto>();
+        public List<EmitterModeBeamDto>? Beams { get; set; } = new List<EmitterModeBeamDto>();
     }
 
     public class EmitterModeBeamDto
@@ -27,8 +27,8 @@ namespace tree_form_API.Dtos
         public double? BeamPosition { get; set; }
         public double? BeamWidthAzimute { get; set; }
         public double? BeamWidthElevation { get; set; }
-        public List<EmitterModeBeamPositionDwellDurationValueDto> DwellDurationValues { get; set; } = new List<EmitterModeBeamPositionDwellDurationValueDto>();
-        public List<EmitterModeBeamPositionSequenceDto> Sequences { get; set; } = new List<EmitterModeBeamPositionSequenceDto>();
+        public List<EmitterModeBeamPositionDwellDurationValueDto>? DwellDurationValues { get; set; } = new List<EmitterModeBeamPositionDwellDurationValueDto>();
+        public List<EmitterModeBeamPositionSequenceDto>? Sequences { get; set; } = new List<EmitterModeBeamPositionSequenceDto>();
     }
 
     public class EmitterModeBeamPositionDwellDurationValueDto
@@ -40,7 +40,7 @@ namespace tree_form_API.Dtos
     public class EmitterModeBeamPositionSequenceDto
     {
         public string SequenceName { get; set; } = string.Empty;
-        public List<EmitterModeBeamPositionFiringOrderDto> FiringOrders { get; set; } = new List<EmitterModeBeamPositionFiringOrderDto>();
+        public List<EmitterModeBeamPositionFiringOrderDto>? FiringOrders { get; set; } = new List<EmitterModeBeamPositionFiringOrderDto>();
     }
 
     public class EmitterModeBeamPositionFiringOrderDto

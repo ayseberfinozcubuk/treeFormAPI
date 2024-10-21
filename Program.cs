@@ -1,5 +1,4 @@
 using tree_form_API.Models;
-using tree_form_API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,17 +11,24 @@ builder.Services.AddCors(options =>
                           .AllowAnyHeader());
 });
 
+// Configure EmitterDatabaseSettings using the configuration section
 builder.Services.Configure<EmitterDatabaseSettings>(
     builder.Configuration.GetSection("EmitterDatabase"));
 
+// Register EmitterService as a singleton
 builder.Services.AddSingleton<EmitterService>();
 
+// Add AutoMapper by scanning the assembly for profiles
+builder.Services.AddAutoMapper(typeof(Program).Assembly);  // Scans the current assembly for AutoMapper profiles
+
+// Add controllers and other services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Enable Swagger UI if in Development environment
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -33,6 +39,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowReactApp");
 
 app.UseHttpsRedirection();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
