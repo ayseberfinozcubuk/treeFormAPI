@@ -22,7 +22,11 @@ builder.Services.AddSingleton<EmitterService>();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);  // Scans the current assembly for AutoMapper profiles
 
 // Add controllers and other services
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null; // This preserves original property names
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
