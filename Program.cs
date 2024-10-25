@@ -6,9 +6,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
-        builder => builder.WithOrigins("http://localhost:3000")
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
+        policy => policy.WithOrigins("http://localhost:3000")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
 });
 
 // Configure EmitterDatabaseSettings using the configuration section
@@ -18,25 +18,35 @@ builder.Services.Configure<EmitterDatabaseSettings>(
 // Register EmitterService as a singleton
 builder.Services.AddSingleton<EmitterService>();
 
-// Add AutoMapper by scanning the assembly for profiles
-builder.Services.AddAutoMapper(typeof(Program).Assembly);  // Scans the current assembly for AutoMapper profiles
-
-// Add controllers and other services
+// Add controllers and configure JSON serialization
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNamingPolicy = null; // This preserves original property names
+        options.JsonSerializerOptions.PropertyNamingPolicy = null; // Preserve original property names
     });
+
+// Configure Swagger (you may want to restrict this in production)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Enable Swagger UI if in Development environment
+// Enable Swagger UI only in Development environment
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+else
+{
+    // Optional: Enable Swagger in production with restricted access
+    // Uncomment if needed
+    // app.UseSwagger();
+    // app.UseSwaggerUI(c =>
+    // {
+    //     c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+    //     c.RoutePrefix = ""; // Set Swagger as root URL if desired
+    // });
 }
 
 // Apply the CORS policy

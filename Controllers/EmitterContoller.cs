@@ -1,76 +1,84 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using tree_form_API.Dtos;
 using tree_form_API.Models;
 
 [ApiController]
 [Route("api/[controller]")]
 public class EmitterController : ControllerBase
 {
-    private readonly IMapper _mapper;
     private readonly EmitterService _emitterService;
 
-    public EmitterController(IMapper mapper, EmitterService emitterService)
+    public EmitterController(EmitterService emitterService)
     {
-        _mapper = mapper;
         _emitterService = emitterService;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetAllEmitters()
-    {
-        var emitters = await _emitterService.GetAllAsync();
-        var emittersDto = _mapper.Map<List<EmitterDto>>(emitters);
-        return Ok(emittersDto);
-    }
-
     [HttpPost]
-    public async Task<IActionResult> Create(EmitterDto emitterDto)
+    public async Task<IActionResult> Create(Emitter emitter)
     {
-        if (emitterDto == null)
+        if (emitter == null)
         {
             return BadRequest("Emitter data cannot be null.");
         }
 
-        // Map DTO to domain model
-        var emitter = _mapper.Map<Emitter>(emitterDto);
-
-        // Assign new Ids generically to Emitter and its nested entities
-        AssignIdsGeneric(emitter);
-
-        // Save to database
+        // Save to database directly with IDs provided by the frontend
         await _emitterService.CreateAsync(emitter);
 
-        return CreatedAtAction(nameof(Create), new { id = emitter.Id }, emitterDto);
+        return CreatedAtAction(nameof(Create), new { id = emitter.Id }, emitter);
     }
 
-    // Generic method to assign Ids to Emitter and nested entities
-    private void AssignIdsGeneric<T>(T entity)
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
-        if (entity == null) return;
+        var emitters = await _emitterService.GetAllAsync();
+        return Ok(emitters);
+    }
 
-        // Check if the entity has an Id property and assign a new Guid
-        var idProperty = entity.GetType().GetProperty("Id");
-        if (idProperty != null && idProperty.PropertyType == typeof(Guid))
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var emitter = await _emitterService.GetByIdAsync(id);
+
+        if (emitter == null)
         {
-            idProperty.SetValue(entity, Guid.NewGuid());
+            return NotFound($"Emitter with ID {id} not found.");
         }
 
-        // Iterate over all properties of the entity
-        foreach (var property in entity.GetType().GetProperties())
+        return Ok(emitter);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, Emitter updatedEmitter)
+    {
+        if (updatedEmitter == null)
         {
-            if (typeof(IEnumerable<object>).IsAssignableFrom(property.PropertyType) && property.PropertyType != typeof(string))
-            {
-                // Recursively assign Ids for each item in the list
-                var items = property.GetValue(entity) as IEnumerable<object>;
-                if (items != null)
-                {
-                    foreach (var item in items)
-                    {
-                        AssignIdsGeneric(item);  // Recursive call for nested entities
-                    }
-                }
-            }
+            return BadRequest("Emitter data cannot be null.");
+        }
+
+        // Ensure the correct Id is assigned
+        updatedEmitter.Id = id;
+
+        try
+        {
+            await _emitterService.UpdateAsync(id, updatedEmitter);
+            return NoContent(); // Returns 204 No Content on successful update
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message); // Returns 404 if the Emitter is not found
+        }
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        try
+        {
+            await _emitterService.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
         }
     }
 }
