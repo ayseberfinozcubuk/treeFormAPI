@@ -2,6 +2,10 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using tree_form_API.Models;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 public class EmitterService
 {
@@ -18,16 +22,12 @@ public class EmitterService
     public async Task CreateAsync(Emitter newEmitter)
     {
         if (newEmitter == null)
-        {
             throw new ArgumentNullException(nameof(newEmitter), "Emitter cannot be null.");
-        }
-
         await _emitterCollection.InsertOneAsync(newEmitter);
     }
 
     // Get all Emitters
-    public async Task<List<Emitter>> GetAllAsync() =>
-        await _emitterCollection.Find(_ => true).ToListAsync();
+    public async Task<List<Emitter>> GetAllAsync() => await _emitterCollection.Find(_ => true).ToListAsync();
 
     // Get an Emitter by ID
     public async Task<Emitter?> GetByIdAsync(Guid id)
@@ -36,113 +36,35 @@ public class EmitterService
         return await _emitterCollection.Find(filter).FirstOrDefaultAsync();
     }
 
-    // Update an Emitter by ID (partial update)
+    // Update an Emitter by ID with full synchronization of nested lists
     public async Task UpdateAsync(Guid id, Emitter updatedEmitter)
     {
         if (updatedEmitter == null)
-        {
             throw new ArgumentNullException(nameof(updatedEmitter), "Updated Emitter data cannot be null.");
-        }
 
         var existingEmitter = await GetByIdAsync(id);
         if (existingEmitter == null)
-        {
             throw new InvalidOperationException($"Emitter with ID {id} not found.");
-        }
 
         var updates = new List<UpdateDefinition<Emitter>>();
 
-        // Check top-level fields for differences
-        if (existingEmitter.Notation != updatedEmitter.Notation)
-            updates.Add(Builders<Emitter>.Update.Set(e => e.Notation, updatedEmitter.Notation));
+        // Update top-level properties if changed
+        AddUpdateIfChanged(updates, existingEmitter.Notation, updatedEmitter.Notation, e => e.Notation);
+        AddUpdateIfChanged(updates, existingEmitter.EmitterName, updatedEmitter.EmitterName, e => e.EmitterName);
+        AddUpdateIfChanged(updates, existingEmitter.SpotNo, updatedEmitter.SpotNo, e => e.SpotNo);
+        AddUpdateIfChanged(updates, existingEmitter.Function, updatedEmitter.Function, e => e.Function);
+        AddUpdateIfChanged(updates, existingEmitter.NumberOfModes, updatedEmitter.NumberOfModes, e => e.NumberOfModes);
 
-        if (existingEmitter.EmitterName != updatedEmitter.EmitterName)
-            updates.Add(Builders<Emitter>.Update.Set(e => e.EmitterName, updatedEmitter.EmitterName));
+        // Synchronize Modes list
+        SynchronizeNestedList(
+            updates,
+            existingEmitter.Modes,
+            updatedEmitter.Modes,
+            e => e.Modes,
+            (existingMode, updatedMode, modeIndex) => SynchronizeMode(updates, existingMode, updatedMode, modeIndex)
+        );
 
-        if (existingEmitter.SpotNo != updatedEmitter.SpotNo)
-            updates.Add(Builders<Emitter>.Update.Set(e => e.SpotNo, updatedEmitter.SpotNo));
-
-        if (existingEmitter.Function != updatedEmitter.Function)
-            updates.Add(Builders<Emitter>.Update.Set(e => e.Function, updatedEmitter.Function));
-
-        if (existingEmitter.NumberOfModes != updatedEmitter.NumberOfModes)
-            updates.Add(Builders<Emitter>.Update.Set(e => e.NumberOfModes, updatedEmitter.NumberOfModes));
-
-        // For nested Modes list
-        if (updatedEmitter.Modes != null)
-        {
-            for (int i = 0; i < updatedEmitter.Modes.Count; i++)
-            {
-                var updatedMode = updatedEmitter.Modes[i];
-
-                if (i >= existingEmitter.Modes.Count)
-                {
-                    // New Mode added
-                    updates.Add(Builders<Emitter>.Update.Push(e => e.Modes, updatedMode));
-                }
-                else
-                {
-                    var existingMode = existingEmitter.Modes[i];
-                    
-                    // Check each field in Mode and create individual updates if changed
-                    if (existingMode.ModeName != updatedMode.ModeName)
-                        updates.Add(Builders<Emitter>.Update.Set(e => e.Modes[i].ModeName, updatedMode.ModeName));
-                    
-                    if (existingMode.Amplitude != updatedMode.Amplitude)
-                        updates.Add(Builders<Emitter>.Update.Set(e => e.Modes[i].Amplitude, updatedMode.Amplitude));
-                    
-                    if (existingMode.TheoricalRange != updatedMode.TheoricalRange)
-                        updates.Add(Builders<Emitter>.Update.Set(e => e.Modes[i].TheoricalRange, updatedMode.TheoricalRange));
-
-                    // For nested Beams list in Modes
-                    for (int j = 0; j < updatedMode.Beams.Count; j++)
-                    {
-                        var updatedBeam = updatedMode.Beams[j];
-                        if (j >= existingMode.Beams.Count)
-                        {
-                            // New Beam added
-                            updates.Add(Builders<Emitter>.Update.Push(e => e.Modes[i].Beams, updatedBeam));
-                        }
-                        else
-                        {
-                            var existingBeam = existingMode.Beams[j];
-
-                            if (existingBeam.BeamName != updatedBeam.BeamName)
-                                updates.Add(Builders<Emitter>.Update.Set(e => e.Modes[i].Beams[j].BeamName, updatedBeam.BeamName));
-
-                            if (existingBeam.AntennaGain != updatedBeam.AntennaGain)
-                                updates.Add(Builders<Emitter>.Update.Set(e => e.Modes[i].Beams[j].AntennaGain, updatedBeam.AntennaGain));
-
-                            // Similarly, add updates for BeamWidthAzimute, BeamWidthElevation, etc.
-
-                            // For DwellDurationValues in Beams
-                            for (int k = 0; k < updatedBeam.DwellDurationValues.Count; k++)
-                            {
-                                var updatedDwell = updatedBeam.DwellDurationValues[k];
-                                if (k >= existingBeam.DwellDurationValues.Count)
-                                {
-                                    updates.Add(Builders<Emitter>.Update.Push(e => e.Modes[i].Beams[j].DwellDurationValues, updatedDwell));
-                                }
-                                else
-                                {
-                                    var existingDwell = existingBeam.DwellDurationValues[k];
-
-                                    if (existingDwell.BeamWPositionDuration != updatedDwell.BeamWPositionDuration)
-                                        updates.Add(Builders<Emitter>.Update.Set(e => e.Modes[i].Beams[j].DwellDurationValues[k].BeamWPositionDuration, updatedDwell.BeamWPositionDuration));
-
-                                    if (existingDwell.BeamWPositionIndex != updatedDwell.BeamWPositionIndex)
-                                        updates.Add(Builders<Emitter>.Update.Set(e => e.Modes[i].Beams[j].DwellDurationValues[k].BeamWPositionIndex, updatedDwell.BeamWPositionIndex));
-                                }
-                            }
-
-                            // Similar approach for Sequences in Beams
-                        }
-                    }
-                }
-            }
-        }
-
-        // Apply the updates if there are any
+        // Apply the updates if any exist
         if (updates.Count > 0)
         {
             var filter = Builders<Emitter>.Filter.Eq(e => e.Id, id);
@@ -150,10 +72,141 @@ public class EmitterService
             var result = await _emitterCollection.UpdateOneAsync(filter, updateDefinition);
 
             if (result.MatchedCount == 0)
-            {
                 throw new InvalidOperationException($"Emitter with ID {id} not found.");
+        }
+    }
+
+    // Helper to add an update if the property has changed
+    private void AddUpdateIfChanged<T>(List<UpdateDefinition<Emitter>> updates, T existingValue, T updatedValue, Expression<Func<Emitter, T>> field)
+    {
+        if (!EqualityComparer<T>.Default.Equals(existingValue, updatedValue))
+            updates.Add(Builders<Emitter>.Update.Set(field, updatedValue));
+    }
+
+    // Synchronize Modes with nested structure
+    private void SynchronizeNestedList<T>(
+        List<UpdateDefinition<Emitter>> updates,
+        List<T> existingList,
+        List<T> updatedList,
+        Expression<Func<Emitter, IEnumerable<T>>> listField,
+        Action<T, T, int> synchronizeNestedFields) where T : class
+    {
+        if (updatedList.Count < existingList.Count)
+        {
+            updates.Add(Builders<Emitter>.Update.Set(listField, updatedList));
+            return;
+        }
+
+        for (int i = 0; i < updatedList.Count; i++)
+        {
+            if (i >= existingList.Count)
+            {
+                updates.Add(Builders<Emitter>.Update.Push(listField, updatedList[i]));
+            }
+            else
+            {
+                synchronizeNestedFields(existingList[i], updatedList[i], i);
             }
         }
+    }
+
+    // Synchronize properties and nested lists for Mode
+    private void SynchronizeMode(
+        List<UpdateDefinition<Emitter>> updates,
+        EmitterMode existingMode,
+        EmitterMode updatedMode,
+        int modeIndex)
+    {
+        AddUpdateIfChanged(updates, existingMode.ModeName, updatedMode.ModeName, e => e.Modes[modeIndex].ModeName);
+        AddUpdateIfChanged(updates, existingMode.Amplitude, updatedMode.Amplitude, e => e.Modes[modeIndex].Amplitude);
+        AddUpdateIfChanged(updates, existingMode.TheoricalRange, updatedMode.TheoricalRange, e => e.Modes[modeIndex].TheoricalRange);
+
+        // Synchronize nested Beams list
+        SynchronizeNestedList(
+            updates,
+            existingMode.Beams,
+            updatedMode.Beams,
+            e => e.Modes[modeIndex].Beams,
+            (existingBeam, updatedBeam, beamIndex) => SynchronizeBeam(updates, existingBeam, updatedBeam, modeIndex, beamIndex)
+        );
+    }
+
+    // Synchronize properties and nested lists for Beam
+    private void SynchronizeBeam(
+        List<UpdateDefinition<Emitter>> updates,
+        EmitterModeBeam existingBeam,
+        EmitterModeBeam updatedBeam,
+        int modeIndex,
+        int beamIndex)
+    {
+        AddUpdateIfChanged(updates, existingBeam.BeamName, updatedBeam.BeamName, e => e.Modes[modeIndex].Beams[beamIndex].BeamName);
+        AddUpdateIfChanged(updates, existingBeam.AntennaGain, updatedBeam.AntennaGain, e => e.Modes[modeIndex].Beams[beamIndex].AntennaGain);
+
+        // Synchronize nested DwellDurationValues
+        SynchronizeNestedList(
+            updates,
+            existingBeam.DwellDurationValues,
+            updatedBeam.DwellDurationValues,
+            e => e.Modes[modeIndex].Beams[beamIndex].DwellDurationValues,
+            (existingDwell, updatedDwell, dwellIndex) => SynchronizeDwellDuration(updates, existingDwell, updatedDwell, modeIndex, beamIndex, dwellIndex)
+        );
+
+        // Synchronize nested Sequences list
+        SynchronizeNestedList(
+            updates,
+            existingBeam.Sequences,
+            updatedBeam.Sequences,
+            e => e.Modes[modeIndex].Beams[beamIndex].Sequences,
+            (existingSequence, updatedSequence, seqIndex) => SynchronizeSequence(updates, existingSequence, updatedSequence, modeIndex, beamIndex, seqIndex)
+        );
+    }
+
+    // Synchronize properties for DwellDuration
+    private void SynchronizeDwellDuration(
+        List<UpdateDefinition<Emitter>> updates,
+        EmitterModeBeamPositionDwellDurationValue existingDwell,
+        EmitterModeBeamPositionDwellDurationValue updatedDwell,
+        int modeIndex,
+        int beamIndex,
+        int dwellIndex)
+    {
+        AddUpdateIfChanged(updates, existingDwell.BeamWPositionDuration, updatedDwell.BeamWPositionDuration, e => e.Modes[modeIndex].Beams[beamIndex].DwellDurationValues[dwellIndex].BeamWPositionDuration);
+        AddUpdateIfChanged(updates, existingDwell.BeamWPositionIndex, updatedDwell.BeamWPositionIndex, e => e.Modes[modeIndex].Beams[beamIndex].DwellDurationValues[dwellIndex].BeamWPositionIndex);
+    }
+
+    // Synchronize properties and nested lists for Sequence
+    private void SynchronizeSequence(
+        List<UpdateDefinition<Emitter>> updates,
+        EmitterModeBeamPositionSequence existingSequence,
+        EmitterModeBeamPositionSequence updatedSequence,
+        int modeIndex,
+        int beamIndex,
+        int seqIndex)
+    {
+        AddUpdateIfChanged(updates, existingSequence.SequenceName, updatedSequence.SequenceName, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].SequenceName);
+
+        // Synchronize nested FiringOrders list
+        SynchronizeNestedList(
+            updates,
+            existingSequence.FiringOrders,
+            updatedSequence.FiringOrders,
+            e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders,
+            (existingOrder, updatedOrder, orderIndex) => SynchronizeFiringOrder(updates, existingOrder, updatedOrder, modeIndex, beamIndex, seqIndex, orderIndex)
+        );
+    }
+
+    // Synchronize properties for FiringOrder
+    private void SynchronizeFiringOrder(
+        List<UpdateDefinition<Emitter>> updates,
+        EmitterModeBeamPositionFiringOrder existingOrder,
+        EmitterModeBeamPositionFiringOrder updatedOrder,
+        int modeIndex,
+        int beamIndex,
+        int seqIndex,
+        int orderIndex)
+    {
+        AddUpdateIfChanged(updates, existingOrder.BeamPositionOrderIndex, updatedOrder.BeamPositionOrderIndex, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionOrderIndex);
+        AddUpdateIfChanged(updates, existingOrder.BeamPositionIndex, updatedOrder.BeamPositionIndex, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionIndex);
     }
 
     // Delete an Emitter by ID
@@ -161,10 +214,7 @@ public class EmitterService
     {
         var filter = Builders<Emitter>.Filter.Eq(e => e.Id, id);
         var result = await _emitterCollection.DeleteOneAsync(filter);
-
         if (result.DeletedCount == 0)
-        {
             throw new InvalidOperationException($"Emitter with ID {id} not found.");
-        }
     }
 }
