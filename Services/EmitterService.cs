@@ -22,8 +22,6 @@ public class EmitterService
     {
         if (newEmitter == null)
             throw new ArgumentNullException(nameof(newEmitter), "Emitter cannot be null.");
-            
-        Console.WriteLine("Inserting emitter data: " + Newtonsoft.Json.JsonConvert.SerializeObject(newEmitter));
         await _emitterCollection.InsertOneAsync(newEmitter);
     }
 

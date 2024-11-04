@@ -120,7 +120,7 @@ namespace tree_form_API.Models
         [BsonId]
         public Guid Id { get; set; }
 
-        public Guid EmitterId { get; set; }
+        public Guid EmitterModeId { get; set; }
         public string BeamName { get; set; } = string.Empty; // Beam Adı
         public double? AntennaGainMin { get; set; } // Anten Kazancı (dbi)
         public double? AntennaGainMax { get; set; } // Anten Kazancı (dbi)
