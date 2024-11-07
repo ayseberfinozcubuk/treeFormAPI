@@ -1,83 +1,270 @@
 {
-  "Notation": "a",
-  "EmitterName": "a",
+  "Id": "79702847-b1e0-4ec1-9cb0-645a55c026f1",
+  "Notation": "111",
+  "EmitterName": "1",
   "SpotNo": "1",
   "Function": "1",
-  "NumberOfModes": "1",
+  "NumberOfModes": 1,
   "Modes": [
     {
+      "Id": "d0ab21ab-207a-4a20-8b25-ad2addeb601d",
+      "EmitterId": "79702847-b1e0-4ec1-9cb0-645a55c026f1",
       "ModeName": "1",
-      "Amplitude": "1",
-      "TheoricalRange": "1",
+      "AmplitudeMin": 1,
+      "AmplitudeMax": 1,
+      "TheoricalRangeMin": 1,
+      "TheoricalRangeMax": 1,
       "Beams": [
         {
+          "Id": "430842fd-c1a2-4244-9773-f073702a5d4a",
+          "EmitterModeId": "d0ab21ab-207a-4a20-8b25-ad2addeb601d",
           "BeamName": "1",
-          "AntennaGain": "1",
-          "BeamPosition": "1",
-          "BeamWidthAzimute": "1",
-          "BeamWidthElevation": "4",
-          "Sequences": [
+          "AntennaGainMin": 1,
+          "AntennaGainMax": 1,
+          "BeamPositionMin": 1,
+          "BeamPositionMax": 1,
+          "BeamWidthAzimuteMin": 1,
+          "BeamWidthAzimuteMax": 1,
+          "BeamWidthElevationMin": 1,
+          "BeamWidthElevationMax": 1,
+          "DwellDurationValues": [
             {
-              "SequenceName": "1",
+              "Id": "cbc8da01-1a34-4a5e-9466-610d4a31a13f",
+              "EmitterModeBeamId": "430842fd-c1a2-4244-9773-f073702a5d4a",
+              "BeamWPositionDurationMin": 1,
+              "BeamWPositionDurationMax": 1,
+              "BeamWPositionIndex": 1,
               "FiringOrders": [
                 {
-                  "BeamPositionOrderIndex": "1",
-                  "BeamPositionIndex": "1",
-                  "BeamPositionDuration": "1",
-                  "Azimuth": "1",
-                  "Elevation": "1"
+                  "Id": "56aa4e3d-3eb9-48be-b5bf-3a5a4df9589b",
+                  "EmitterModeBeamPositionSequenceId": "00000000-0000-0000-0000-000000000000",
+                  "EmitterModeBeamPositionDwellDurationValueId": "cbc8da01-1a34-4a5e-9466-610d4a31a13f",
+                  "BeamPositionOrderIndexMin": 1,
+                  "BeamPositionOrderIndexMax": 1,
+                  "BeamPositionIndexMin": 1,
+                  "BeamPositionIndexMax": 1,
+                  "BeamPositionDurationMin": 1,
+                  "BeamPositionDurationMax": 1,
+                  "ElevationMin": 1,
+                  "ElevationMax": 1,
+                  "AzimuthMin": 1,
+                  "AzimuthMax": 1
                 },
                 {
-                  "BeamPositionOrderIndex": "1",
-                  "BeamPositionIndex": "1",
-                  "BeamPositionDuration": "1",
-                  "Elevation": "1",
-                  "Azimuth": "0"
+                  "Id": "6b89dde1-bfab-4ec5-a151-8e994b1ca86f",
+                  "EmitterModeBeamPositionSequenceId": "00000000-0000-0000-0000-000000000000",
+                  "EmitterModeBeamPositionDwellDurationValueId": "cbc8da01-1a34-4a5e-9466-610d4a31a13f",
+                  "BeamPositionOrderIndexMin": 2,
+                  "BeamPositionOrderIndexMax": 2,
+                  "BeamPositionIndexMin": 2,
+                  "BeamPositionIndexMax": 2,
+                  "BeamPositionDurationMin": 2,
+                  "BeamPositionDurationMax": 2,
+                  "ElevationMin": 2,
+                  "ElevationMax": 2,
+                  "AzimuthMin": 2,
+                  "AzimuthMax": 2
                 }
               ]
             },
             {
-              "SequenceName": "1"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "ModeName": "1",
-      "Amplitude": "1",
-      "TheoricalRange": "1",
-      "Beams": [
-        {
-          "BeamName": "1",
-          "AntennaGain": "1",
-          "BeamPosition": "1",
-          "BeamWidthAzimute": "1",
-          "BeamWidthElevation": "1",
-          "DwellDurationValues": [
-            {
-              "BeamWPositionDuration": "1",
-              "BeamWPositionIndex": "1"
-            },
-            {
-              "BeamWPositionDuration": "1",
-              "BeamWPositionIndex": "1"
+              "Id": "4b00b721-b66e-4793-875a-5e91914f63d8",
+              "EmitterModeBeamId": "430842fd-c1a2-4244-9773-f073702a5d4a",
+              "BeamWPositionDurationMin": 2,
+              "BeamWPositionDurationMax": 2,
+              "BeamWPositionIndex": 2,
+              "FiringOrders": []
             }
           ],
           "Sequences": [
             {
+              "Id": "2972a8df-3ed8-4f54-9aa7-523b3205a74b",
+              "EmitterModeBeamId": "430842fd-c1a2-4244-9773-f073702a5d4a",
               "SequenceName": "1",
               "FiringOrders": [
                 {
-                  "BeamPositionOrderIndex": "1",
-                  "BeamPositionIndex": "1",
-                  "BeamPositionDuration": "1",
-                  "Elevation": "1",
-                  "Azimuth": "1"
+                  "Id": "a1105755-f2c6-49ef-be2f-e4d6b3954280",
+                  "EmitterModeBeamPositionSequenceId": "2972a8df-3ed8-4f54-9aa7-523b3205a74b",
+                  "EmitterModeBeamPositionDwellDurationValueId": "00000000-0000-0000-0000-000000000000",
+                  "BeamPositionOrderIndexMin": 1,
+                  "BeamPositionOrderIndexMax": 1,
+                  "BeamPositionIndexMin": 1,
+                  "BeamPositionIndexMax": 1,
+                  "BeamPositionDurationMin": 1,
+                  "BeamPositionDurationMax": 1,
+                  "ElevationMin": 1,
+                  "ElevationMax": 1,
+                  "AzimuthMin": 1,
+                  "AzimuthMax": 1
+                },
+                {
+                  "Id": "0697b86b-7c4a-442c-be18-abdcc9fa316f",
+                  "EmitterModeBeamPositionSequenceId": "2972a8df-3ed8-4f54-9aa7-523b3205a74b",
+                  "EmitterModeBeamPositionDwellDurationValueId": "00000000-0000-0000-0000-000000000000",
+                  "BeamPositionOrderIndexMin": 2,
+                  "BeamPositionOrderIndexMax": 2,
+                  "BeamPositionIndexMin": 2,
+                  "BeamPositionIndexMax": 2,
+                  "BeamPositionDurationMin": 2,
+                  "BeamPositionDurationMax": 2,
+                  "ElevationMin": 2,
+                  "ElevationMax": 2,
+                  "AzimuthMin": 2,
+                  "AzimuthMax": 2
                 }
               ]
+            },
+            {
+              "Id": "fc0e1b7f-96f4-4b18-8a50-82f21424dd0a",
+              "EmitterModeBeamId": "430842fd-c1a2-4244-9773-f073702a5d4a",
+              "SequenceName": "2",
+              "FiringOrders": []
             }
           ]
+        }
+      ],
+      "Pris": [
+        {
+          "Id": "241663ef-61d6-43cd-9bce-a7e9d4d61c80",
+          "EmitterModeId": "d0ab21ab-207a-4a20-8b25-ad2addeb601d",
+          "PriName": "1",
+          "PriLimitMin": 1,
+          "PriLimitMax": 1,
+          "PrfLimitMin": 1,
+          "PrfLimitMax": 1,
+          "NominalPri": 1,
+          "PriMeanMin": 1,
+          "PriMeanMax": 1,
+          "StandartDeviation": 1,
+          "PrfMeanMin": 1,
+          "PrfMeanMax": 1,
+          "PulseToPulseMean": 1,
+          "Continuity": "Unknown",
+          "Pattern": "Patterned",
+          "SuperPeriods": [
+            {
+              "Id": "b5734cc2-e0a9-4d51-badc-34dde0a0612a",
+              "EmitterModePriId": "241663ef-61d6-43cd-9bce-a7e9d4d61c80",
+              "SuperPeriodValueMin": 1,
+              "SuperPeriodValueMax": 1
+            },
+            {
+              "Id": "915e7bf9-6d8f-44a3-a11f-0e5b743582ac",
+              "EmitterModePriId": "241663ef-61d6-43cd-9bce-a7e9d4d61c80",
+              "SuperPeriodValueMin": 2,
+              "SuperPeriodValueMax": 2
+            }
+          ],
+          "MostProbableValues": [
+            {
+              "Id": "b826020a-f273-4999-977a-85a3d514eb1d",
+              "EmitterModePriId": "241663ef-61d6-43cd-9bce-a7e9d4d61c80",
+              "MostProbableValueMin": 1,
+              "MostProbableValueMax": 1
+            },
+            {
+              "Id": "9be19014-7320-450f-960e-78a1b64ec27a",
+              "EmitterModePriId": "241663ef-61d6-43cd-9bce-a7e9d4d61c80",
+              "MostProbableValueMin": 2,
+              "MostProbableValueMax": 2
+            }
+          ],
+          "DiscreteValues": [
+            {
+              "Id": "0d9a15e7-4861-45fe-80fd-a9f73f247a63",
+              "EmitterModePriId": "241663ef-61d6-43cd-9bce-a7e9d4d61c80",
+              "DiscreteValueMin": 1,
+              "DiscreteValueMax": 1,
+              "DwellDurationMin": 1,
+              "DwellDurationMax": null,
+              "TransitionRangeMin": 1,
+              "TransitionRangeMax": 1,
+              "FiringOrders": [
+                {
+                  "Id": "1c0d0e68-373f-421f-bc95-b6f3d353dcfd",
+                  "EmitterModePriSequenceId": "00000000-0000-0000-0000-000000000000",
+                  "EmitterModePriDiscreteValueId": "0d9a15e7-4861-45fe-80fd-a9f73f247a63",
+                  "OrderIndexMin": 1,
+                  "OrderIndexMax": 1
+                },
+                {
+                  "Id": "080c0231-5231-4ce9-89ce-f8d86b290ce4",
+                  "EmitterModePriSequenceId": "00000000-0000-0000-0000-000000000000",
+                  "EmitterModePriDiscreteValueId": "0d9a15e7-4861-45fe-80fd-a9f73f247a63",
+                  "OrderIndexMin": 2,
+                  "OrderIndexMax": 2
+                }
+              ]
+            },
+            {
+              "Id": "4cee95e8-a324-4098-9726-3a3ab66d13f3",
+              "EmitterModePriId": "241663ef-61d6-43cd-9bce-a7e9d4d61c80",
+              "DiscreteValueMin": 2,
+              "DiscreteValueMax": 2,
+              "DwellDurationMin": 2,
+              "DwellDurationMax": null,
+              "TransitionRangeMin": 2,
+              "TransitionRangeMax": 6,
+              "FiringOrders": []
+            }
+          ],
+          "Sequences": [
+            {
+              "Id": "53ee424a-3e97-44ba-8876-9b083522afb5",
+              "EmitterModePriId": "241663ef-61d6-43cd-9bce-a7e9d4d61c80",
+              "SequenceName": "1",
+              "NumberOfPulsesInSequence": 1,
+              "TotalTimeForSequenceMin": 1,
+              "TotalTimeForSequenceMax": 1,
+              "FiringOrders": [
+                {
+                  "Id": "9d350ec2-ebf2-4b0a-ad1d-53e51eee81c4",
+                  "EmitterModePriSequenceId": "53ee424a-3e97-44ba-8876-9b083522afb5",
+                  "EmitterModePriDiscreteValueId": "00000000-0000-0000-0000-000000000000",
+                  "OrderIndexMin": 1,
+                  "OrderIndexMax": 1
+                },
+                {
+                  "Id": "d75f6932-c131-4f69-9d2a-48181e3add43",
+                  "EmitterModePriSequenceId": "53ee424a-3e97-44ba-8876-9b083522afb5",
+                  "EmitterModePriDiscreteValueId": "00000000-0000-0000-0000-000000000000",
+                  "OrderIndexMin": 2,
+                  "OrderIndexMax": 2
+                }
+              ]
+            },
+            {
+              "Id": "84feb235-27c0-4cbd-b6f9-56deefd68d3c",
+              "EmitterModePriId": "241663ef-61d6-43cd-9bce-a7e9d4d61c80",
+              "SequenceName": "2",
+              "NumberOfPulsesInSequence": 2,
+              "TotalTimeForSequenceMin": 2,
+              "TotalTimeForSequenceMax": 4,
+              "FiringOrders": []
+            }
+          ]
+        },
+        {
+          "Id": "d7e3b233-5591-45e9-91a2-5ef9ca697a94",
+          "EmitterModeId": "d0ab21ab-207a-4a20-8b25-ad2addeb601d",
+          "PriName": "2",
+          "PriLimitMin": 2,
+          "PriLimitMax": 2,
+          "PrfLimitMin": 0.5,
+          "PrfLimitMax": 0.5,
+          "NominalPri": 2,
+          "PriMeanMin": 2,
+          "PriMeanMax": 2,
+          "StandartDeviation": 2,
+          "PrfMeanMin": 0.5,
+          "PrfMeanMax": 0.5,
+          "PulseToPulseMean": 2,
+          "Continuity": "Unknown",
+          "Pattern": "Unknown",
+          "SuperPeriods": [],
+          "MostProbableValues": [],
+          "DiscreteValues": [],
+          "Sequences": []
         }
       ]
     }
