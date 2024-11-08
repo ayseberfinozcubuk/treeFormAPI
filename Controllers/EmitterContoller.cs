@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using tree_form_API.Models;
+using System;
+using System.Threading.Tasks;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -13,7 +15,7 @@ public class EmitterController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(Emitter emitter)
+    public async Task<IActionResult> Create([FromBody] Emitter emitter)
     {
         if (emitter == null)
         {
@@ -23,7 +25,7 @@ public class EmitterController : ControllerBase
         // Save to database directly with IDs provided by the frontend
         await _emitterService.CreateAsync(emitter);
 
-        return CreatedAtAction(nameof(Create), new { id = emitter.Id }, emitter);
+        return CreatedAtAction(nameof(GetById), new { id = emitter.Id }, emitter); // Use GetById to provide the location of the created resource
     }
 
     [HttpGet]
@@ -47,7 +49,7 @@ public class EmitterController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, Emitter updatedEmitter)
+    public async Task<IActionResult> Update(Guid id, [FromBody] Emitter updatedEmitter)
     {
         if (updatedEmitter == null)
         {

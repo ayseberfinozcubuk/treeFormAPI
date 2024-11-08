@@ -50,6 +50,7 @@ public class EmitterService
         AddUpdateIfChanged(updates, existingEmitter.Function, updatedEmitter.Function, e => e.Function);
         AddUpdateIfChanged(updates, existingEmitter.NumberOfModes, updatedEmitter.NumberOfModes, e => e.NumberOfModes);
 
+        // Synchronize Modes
         SynchronizeNestedList(
             updates,
             existingEmitter.Modes,
@@ -185,6 +186,21 @@ public class EmitterService
         );
     }
 
+    private void SynchronizeFiringOrder(
+        List<UpdateDefinition<Emitter>> updates,
+        EmitterModeBeamPositionFiringOrder existingOrder,
+        EmitterModeBeamPositionFiringOrder updatedOrder,
+        int modeIndex,
+        int beamIndex,
+        int seqIndex,
+        int orderIndex)
+    {
+        AddUpdateIfChanged(updates, existingOrder.BeamPositionOrderIndexMin, updatedOrder.BeamPositionOrderIndexMin, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionOrderIndexMin);
+        AddUpdateIfChanged(updates, existingOrder.BeamPositionOrderIndexMax, updatedOrder.BeamPositionOrderIndexMax, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionOrderIndexMax);
+        AddUpdateIfChanged(updates, existingOrder.BeamPositionIndexMin, updatedOrder.BeamPositionIndexMin, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionIndexMin);
+        AddUpdateIfChanged(updates, existingOrder.BeamPositionIndexMax, updatedOrder.BeamPositionIndexMax, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionIndexMax);
+    }
+
     private void SynchronizeBeamSequence(
         List<UpdateDefinition<Emitter>> updates,
         EmitterModeBeamPositionSequence existingSequence,
@@ -202,21 +218,6 @@ public class EmitterService
             e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders,
             (existingOrder, updatedOrder, orderIndex) => SynchronizeFiringOrder(updates, existingOrder, updatedOrder, modeIndex, beamIndex, seqIndex, orderIndex)
         );
-    }
-
-    private void SynchronizeFiringOrder(
-        List<UpdateDefinition<Emitter>> updates,
-        EmitterModeBeamPositionFiringOrder existingOrder,
-        EmitterModeBeamPositionFiringOrder updatedOrder,
-        int modeIndex,
-        int beamIndex,
-        int seqIndex,
-        int orderIndex)
-    {
-        AddUpdateIfChanged(updates, existingOrder.BeamPositionOrderIndexMin, updatedOrder.BeamPositionOrderIndexMin, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionOrderIndexMin);
-        AddUpdateIfChanged(updates, existingOrder.BeamPositionOrderIndexMax, updatedOrder.BeamPositionOrderIndexMax, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionOrderIndexMax);
-        AddUpdateIfChanged(updates, existingOrder.BeamPositionIndexMin, updatedOrder.BeamPositionIndexMin, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionIndexMin);
-        AddUpdateIfChanged(updates, existingOrder.BeamPositionIndexMax, updatedOrder.BeamPositionIndexMax, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionIndexMax);
     }
 
     private void SynchronizePri(
