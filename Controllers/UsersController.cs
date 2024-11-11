@@ -1,6 +1,7 @@
 // Controllers/UsersController.cs
 using Microsoft.AspNetCore.Mvc;
 using tree_form_API.Services;
+using tree_form_API.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -14,14 +15,21 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("signup")]
-    public async Task<IActionResult> SignUp(UserRegistrationDTO userDto)
+    public async Task<IActionResult> SignUp([FromBody] UserRegistrationDTO userDto)
     {
-        var result = await _userService.RegisterUser(userDto);
-        if (result == null)
+        var user = await _userService.RegisterUser(userDto);
+        if (user == null)
         {
             return BadRequest("User could not be created.");
         }
-        return Ok(result);
+        
+        var token = await _userService.AuthenticateUser(new UserLoginDTO
+        {
+            Email = user.Email,
+            Password = userDto.Password
+        });
+
+        return Ok(new { user, Token = token });
     }
 
     [HttpPost("signin")]

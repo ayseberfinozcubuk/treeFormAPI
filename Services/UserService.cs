@@ -25,31 +25,22 @@ namespace tree_form_API.Services
 
         public async Task<UserResponseDTO> RegisterUser(UserRegistrationDTO userDto)
         {
-            // Map DTO to User entity
             var user = _mapper.Map<User>(userDto);
-            
-            // Hash password
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
 
-            // Insert user into collection
             await _userCollection.InsertOneAsync(user);
-
-            // Map created User entity back to response DTO and return it
             return _mapper.Map<UserResponseDTO>(user);
         }
 
         public async Task<string?> AuthenticateUser(UserLoginDTO loginDto)
         {
-            // Find user by email
             var user = await _userCollection.Find(u => u.Email == loginDto.Email).FirstOrDefaultAsync();
 
-            // Validate password
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
             {
                 return null; // Authentication failed
             }
 
-            // Generate JWT token
             return GenerateJwtToken(user);
         }
 
@@ -70,7 +61,7 @@ namespace tree_form_API.Services
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
+                expires: DateTime.UtcNow.AddHours(Convert.ToDouble(jwtSettings["ExpiresInHours"])),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);

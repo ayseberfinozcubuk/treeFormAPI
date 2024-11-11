@@ -17,32 +17,68 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader());
 });
 
-// Configure EmitterDatabaseSettings using the configuration section
+// Configure and validate EmitterDatabaseSettings using the configuration section
 builder.Services.Configure<EmitterDatabaseSettings>(
     builder.Configuration.GetSection("EmitterDatabase"));
 
-// Register MongoDB client
+// Register MongoDB client as a singleton for reuse
 builder.Services.AddSingleton<IMongoClient>(s =>
-    new MongoClient(builder.Configuration.GetValue<string>("EmitterDatabase:ConnectionString")));
+{
+    var connectionString = builder.Configuration.GetValue<string>("EmitterDatabase:ConnectionString");
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException("MongoDB connection string is missing.");
+    }
+    return new MongoClient(connectionString);
+});
 
-// Register IMongoCollection<User> so UserService can inject it
-builder.Services.AddSingleton(sp =>
+// Register IMongoCollection<User> for injection into UserService
+builder.Services.AddScoped(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<EmitterDatabaseSettings>>().Value;
     var client = sp.GetRequiredService<IMongoClient>();
     var database = client.GetDatabase(settings.DatabaseName);
-    return database.GetCollection<User>(settings.Collections["Users"]);
+
+    // Ensure the collection name for users is specified and retrieve it
+    if (!settings.Collections.TryGetValue("Users", out var usersCollectionName) || string.IsNullOrWhiteSpace(usersCollectionName))
+    {
+        throw new InvalidOperationException("Users collection name is not specified in configuration.");
+    }
+    
+    return database.GetCollection<User>(usersCollectionName);
+});
+
+// Register IMongoCollection<Emitter> for injection into EmitterService
+builder.Services.AddScoped(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<EmitterDatabaseSettings>>().Value;
+    var client = sp.GetRequiredService<IMongoClient>();
+    var database = client.GetDatabase(settings.DatabaseName);
+
+    if (!settings.Collections.TryGetValue("Emitters", out var emittersCollectionName) || string.IsNullOrWhiteSpace(emittersCollectionName))
+    {
+        throw new InvalidOperationException("Emitters collection name is not specified in configuration.");
+    }
+    
+    return database.GetCollection<Emitter>(emittersCollectionName);
 });
 
 // Register AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-// Register services
-builder.Services.AddSingleton<EmitterService>();
-builder.Services.AddSingleton<UserService>();
+// Register services as scoped
+builder.Services.AddScoped<EmitterService>();
+builder.Services.AddScoped<UserService>();
 
 // Configure JWT authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
+var jwtKey = jwtSettings.GetValue<string>("Key");
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException("JWT Key is not provided in configuration.");
+}
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -58,7 +94,7 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
 });
 
