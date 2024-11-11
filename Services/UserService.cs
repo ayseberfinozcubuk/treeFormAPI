@@ -2,6 +2,11 @@
 using AutoMapper;
 using MongoDB.Driver;
 using tree_form_API.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using Microsoft.Extensions.Configuration;
 
 namespace tree_form_API.Services
 {
@@ -9,11 +14,13 @@ namespace tree_form_API.Services
     {
         private readonly IMongoCollection<User> _userCollection;
         private readonly IMapper _mapper;
+        private readonly IConfiguration _configuration;
 
-        public UserService(IMongoCollection<User> userCollection, IMapper mapper)
+        public UserService(IMongoCollection<User> userCollection, IMapper mapper, IConfiguration configuration)
         {
             _userCollection = userCollection;
             _mapper = mapper;
+            _configuration = configuration;
         }
 
         public async Task<UserResponseDTO> RegisterUser(UserRegistrationDTO userDto)
@@ -31,7 +38,7 @@ namespace tree_form_API.Services
             return _mapper.Map<UserResponseDTO>(user);
         }
 
-        public async Task<UserResponseDTO> AuthenticateUser(UserLoginDTO loginDto)
+        public async Task<string?> AuthenticateUser(UserLoginDTO loginDto)
         {
             // Find user by email
             var user = await _userCollection.Find(u => u.Email == loginDto.Email).FirstOrDefaultAsync();
@@ -42,8 +49,31 @@ namespace tree_form_API.Services
                 return null; // Authentication failed
             }
 
-            // Map user entity to response DTO and return it
-            return _mapper.Map<UserResponseDTO>(user);
+            // Generate JWT token
+            return GenerateJwtToken(user);
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            var jwtSettings = _configuration.GetSection("Jwt");
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.Email, user.Email)
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: jwtSettings["Issuer"],
+                audience: jwtSettings["Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

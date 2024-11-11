@@ -25,13 +25,15 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("signin")]
-    public async Task<IActionResult> SignIn(UserLoginDTO loginDto)
+    public async Task<IActionResult> SignIn([FromBody] UserLoginDTO loginDto)
     {
-        var result = await _userService.AuthenticateUser(loginDto);
-        if (result == null)
+        var token = await _userService.AuthenticateUser(loginDto);
+
+        if (token == null)
         {
             return Unauthorized("Invalid credentials.");
         }
-        return Ok(result);
+
+        return Ok(new { Token = token });
     }
 }
