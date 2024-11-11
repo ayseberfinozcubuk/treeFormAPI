@@ -1,4 +1,10 @@
+using MongoDB.Driver;
 using tree_form_API.Models;
+using tree_form_API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +21,46 @@ builder.Services.AddCors(options =>
 builder.Services.Configure<EmitterDatabaseSettings>(
     builder.Configuration.GetSection("EmitterDatabase"));
 
-// Register EmitterService as a singleton
+// Register MongoDB client
+builder.Services.AddSingleton<IMongoClient>(s =>
+    new MongoClient(builder.Configuration.GetValue<string>("EmitterDatabase:ConnectionString")));
+
+// Register IMongoCollection<User> so UserService can inject it
+builder.Services.AddSingleton(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<EmitterDatabaseSettings>>().Value;
+    var client = sp.GetRequiredService<IMongoClient>();
+    var database = client.GetDatabase(settings.DatabaseName);
+    return database.GetCollection<User>(settings.Collections["Users"]);
+});
+
+// Register AutoMapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Register services
 builder.Services.AddSingleton<EmitterService>();
+builder.Services.AddSingleton<UserService>();
+
+// Configure JWT authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false; // Set to true in production
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]))
+    };
+});
 
 // Add controllers and configure JSON serialization
 builder.Services.AddControllers()
@@ -25,7 +69,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = null; // Preserve original property names
     });
 
-// Configure Swagger (you may want to restrict this in production)
+// Configure Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -37,24 +81,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-else
-{
-    // Optional: Enable Swagger in production with restricted access
-    // Uncomment if needed
-    // app.UseSwagger();
-    // app.UseSwaggerUI(c =>
-    // {
-    //     c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
-    //     c.RoutePrefix = ""; // Set Swagger as root URL if desired
-    // });
-}
 
 // Apply the CORS policy
 app.UseCors("AllowReactApp");
 
 app.UseHttpsRedirection();
-app.UseAuthentication();
+app.UseAuthentication(); // Enable authentication middleware
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();

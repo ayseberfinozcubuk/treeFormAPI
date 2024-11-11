@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using tree_form_API.Models;
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using tree_form_API.Services;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class EmitterController : ControllerBase

@@ -1,12 +1,14 @@
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using tree_form_API.Models.Interfaces;
 
 namespace tree_form_API.Models
 {
-    public class Emitter
+    public class Emitter : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
-
         public string Notation { get; set; } = string.Empty; // Notasyon: Alphanumeric emitter notation
         public string EmitterName { get; set; } = string.Empty; // Emiter Adı
         public string? SpotNo { get; set; } // Spot No
@@ -15,11 +17,13 @@ namespace tree_form_API.Models
         public List<EmitterMode> Modes { get; set; } = new List<EmitterMode>(); // Emiter Mod Listesi
     }
 
-    public class EmitterMode
+    public class EmitterMode : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
-
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterId { get; set; }
         public string ModeName { get; set; } = string.Empty; // Mode Adı
         public double? AmplitudeMin { get; set; } // Genlik (minivolt)
@@ -30,11 +34,13 @@ namespace tree_form_API.Models
         public List<EmitterModePri> Pris { get; set; } = new List<EmitterModePri>(); // Emiter Mod PRI Listesi
     }
 
-    public class EmitterModePri
+    public class EmitterModePri : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
-
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModeId { get; set; }
         public string PriName { get; set; } = string.Empty; // Pri Adı
         public double? PriLimitMin { get; set; } // Pri Limitleri (us)
@@ -56,11 +62,13 @@ namespace tree_form_API.Models
         public List<EmitterModePriSequence> Sequences { get; set; } = new List<EmitterModePriSequence>();
     }
 
-    public class EmitterModePriSequence
+    public class EmitterModePriSequence : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
-
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModePriId { get; set; }
         public string? SequenceName { get; set; } // Dizi Adı
         public int? NumberOfPulsesInSequence { get; set; } // Dizi İçerisindeki Pals Sayısı
@@ -69,22 +77,29 @@ namespace tree_form_API.Models
         public List<EmitterModePriFiringOrder> FiringOrders { get; set; } = new List<EmitterModePriFiringOrder>();
     }
 
-    public class EmitterModePriFiringOrder
+    public class EmitterModePriFiringOrder : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModePriSequenceId { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModePriDiscreteValueId { get; set; }
         public int OrderIndexMin { get; set; } // Gönderim Sıra No
         public int OrderIndexMax { get; set; } // Gönderim Sıra No
 
     }
 
-    public class EmitterModePriDiscreteValue
+    public class EmitterModePriDiscreteValue : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
-
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModePriId { get; set; }
         public double DiscreteValueMin { get; set; } // Ayrık Değer (microsecond)
         public double DiscreteValueMax { get; set; } // Ayrık Değer (microsecond)
@@ -95,31 +110,37 @@ namespace tree_form_API.Models
         public List<EmitterModePriFiringOrder> FiringOrders { get; set; } = new List<EmitterModePriFiringOrder>();
     }
 
-    public class EmitterModePriMostProbableValue
+    public class EmitterModePriMostProbableValue : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
-
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModePriId { get; set; }
         public double MostProbableValueMin { get; set; } // En Yüksel Olasılıklı Değer (microsecond)
         public double MostProbableValueMax { get; set; } // En Yüksel Olasılıklı Değer (microsecond)
     }
 
-    public class EmitterModePriSuperPeriodValue
+    public class EmitterModePriSuperPeriodValue : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
-
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModePriId { get; set; }
         public double SuperPeriodValueMin { get; set; } // Alt Periyod Değeri (microsecond)
         public double SuperPeriodValueMax { get; set; } // Alt Periyod Değeri (microsecond)
     }
 
-    public class EmitterModeBeam
+    public class EmitterModeBeam : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
-
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModeId { get; set; }
         public string BeamName { get; set; } = string.Empty; // Beam Adı
         public double? AntennaGainMin { get; set; } // Anten Kazancı (dbi)
@@ -134,11 +155,13 @@ namespace tree_form_API.Models
         public List<EmitterModeBeamPositionSequence> Sequences { get; set; } = new List<EmitterModeBeamPositionSequence>();
     }
 
-    public class EmitterModeBeamPositionDwellDurationValue
+    public class EmitterModeBeamPositionDwellDurationValue : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
-
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModeBeamId { get; set; }
         public double? BeamWPositionDurationMin { get; set; }  // Hüzme Pozisyonu Kalış Süresi
         public double? BeamWPositionDurationMax { get; set; }  // Hüzme Pozisyonu Kalış Süresi
@@ -146,21 +169,28 @@ namespace tree_form_API.Models
         public List<EmitterModeBeamPositionFiringOrder> FiringOrders { get; set; } = new List<EmitterModeBeamPositionFiringOrder>();  // Dizi Elemanı Listesi
     }
 
-    public class EmitterModeBeamPositionSequence
+    public class EmitterModeBeamPositionSequence : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
-
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModeBeamId { get; set; }
         public string? SequenceName { get; set; }  // Parametre Dizisi Adı
         public List<EmitterModeBeamPositionFiringOrder> FiringOrders { get; set; } = new List<EmitterModeBeamPositionFiringOrder>();  // Dizi Elemanı Listesi
     }
 
-    public class EmitterModeBeamPositionFiringOrder
+    public class EmitterModeBeamPositionFiringOrder : IIdentifiable
     {
         [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModeBeamPositionSequenceId { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid EmitterModeBeamPositionDwellDurationValueId { get; set; }
         public int BeamPositionOrderIndexMin { get; set; }  // Gönderim Sıra No
         public int BeamPositionOrderIndexMax { get; set; }  // Gönderim Sıra No
