@@ -91,5 +91,22 @@ namespace tree_form_API.Services
             var updatedUser = await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
             return updatedUser != null ? _mapper.Map<UserResponseDTO>(updatedUser) : null;
         }
+    
+        public async Task<bool> UpdatePassword(string userId, string newPassword)
+        {
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            var updateDefinition = Builders<User>.Update.Set(u => u.PasswordHash, passwordHash);
+
+            var result = await _userCollection.UpdateOneAsync(
+                u => u.Id == userId,
+                updateDefinition);
+
+            return result.ModifiedCount > 0; // Returns true if update was successful
+        }
+    
+        public async Task<User?> GetUserById(string id)
+        {
+            return await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
+        }
     }
 }

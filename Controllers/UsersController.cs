@@ -65,4 +65,35 @@ public class UsersController : ControllerBase
 
         return Ok(updatedUser);
     }
+
+    [HttpPut("{id}/change-password")]
+    public async Task<IActionResult> ChangePassword(string id, [FromBody] ChangePasswordDTO changePasswordDto)
+    {
+        var user = await _userService.GetUserById(id); // Implement this method if not present
+        if (user == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        // Verify current password
+        if (!BCrypt.Net.BCrypt.Verify(changePasswordDto.CurrentPassword, user.PasswordHash))
+        {
+            return Unauthorized("Current password is incorrect.");
+        }
+
+        // Check new password confirmation
+        if (changePasswordDto.NewPassword != changePasswordDto.ConfirmNewPassword)
+        {
+            return BadRequest("New password and confirmation do not match.");
+        }
+
+        // Update password
+        var success = await _userService.UpdatePassword(id, changePasswordDto.NewPassword);
+        if (!success)
+        {
+            return StatusCode(500, "An error occurred while updating the password.");
+        }
+
+        return Ok("Password updated successfully.");
+    }
 }
