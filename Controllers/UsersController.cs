@@ -42,6 +42,27 @@ public class UsersController : ControllerBase
             return Unauthorized("Invalid credentials.");
         }
 
-        return Ok(new { Token = token });
+        var user = await _userService.GetUserByEmail(loginDto.Email);
+        var userResponse = new UserResponseDTO
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            Email = user.Email
+        };
+
+        return Ok(new { User = userResponse, Token = token });
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateUserProfile(string id, [FromBody] UserUpdateDTO updateDto)
+    {
+        var updatedUser = await _userService.UpdateUser(id, updateDto);
+
+        if (updatedUser == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        return Ok(updatedUser);
     }
 }

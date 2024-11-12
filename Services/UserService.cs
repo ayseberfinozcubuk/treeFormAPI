@@ -66,5 +66,30 @@ namespace tree_form_API.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+    
+        public async Task<User?> GetUserByEmail(string email)
+        {
+            return await _userCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+        }
+    
+        public async Task<UserResponseDTO?> UpdateUser(string id, UserUpdateDTO updateDto)
+        {
+            var updateDefinition = Builders<User>.Update
+                .Set(u => u.UserName, updateDto.UserName)
+                .Set(u => u.Email, updateDto.Email);
+
+            var result = await _userCollection.UpdateOneAsync(
+                u => u.Id == id,
+                updateDefinition);
+
+            if (result.MatchedCount == 0)
+            {
+                return null; // No user found with given ID
+            }
+
+            // Fetch updated user
+            var updatedUser = await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
+            return updatedUser != null ? _mapper.Map<UserResponseDTO>(updatedUser) : null;
+        }
     }
 }
