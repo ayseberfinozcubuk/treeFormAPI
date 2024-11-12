@@ -31,6 +31,7 @@ public class EmitterController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = emitter.Id }, emitter); // Use GetById to provide the location of the created resource
     }
 
+    //[AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
