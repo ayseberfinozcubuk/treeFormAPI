@@ -23,13 +23,28 @@ namespace tree_form_API.Services
             _configuration = configuration;
         }
 
-        public async Task<UserResponseDTO> RegisterUser(UserRegistrationDTO userDto)
+        // Get all users
+        public async Task<List<UserResponseDTO>> GetAllUsers()
+        {
+            var users = await _userCollection.Find(_ => true).ToListAsync();
+            return _mapper.Map<List<UserResponseDTO>>(users);
+        }
+
+        // Add user with specified role
+        public async Task<UserResponseDTO?> AddUser(UserRegistrationDTO userDto)
         {
             var user = _mapper.Map<User>(userDto);
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
 
             await _userCollection.InsertOneAsync(user);
             return _mapper.Map<UserResponseDTO>(user);
+        }
+        
+        // Delete user by ID
+        public async Task<bool> DeleteUser(string id)
+        {
+            var result = await _userCollection.DeleteOneAsync(u => u.Id == id);
+            return result.DeletedCount > 0; // Returns true if deletion was successful
         }
 
         public async Task<string?> AuthenticateUser(UserLoginDTO loginDto)
@@ -54,7 +69,8 @@ namespace tree_form_API.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role) // Add user role
             };
 
             var token = new JwtSecurityToken(
@@ -66,7 +82,7 @@ namespace tree_form_API.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-    
+
         public async Task<User?> GetUserByEmail(string email)
         {
             return await _userCollection.Find(u => u.Email == email).FirstOrDefaultAsync();

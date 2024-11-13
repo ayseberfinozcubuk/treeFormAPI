@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using tree_form_API.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -97,6 +98,12 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminPolicy", policy => policy.RequireRole(UserRoles.Admin));
+    options.AddPolicy("ReadWritePolicy", policy => policy.RequireRole(UserRoles.Admin, UserRoles.ReadWrite));
 });
 
 // Add controllers and configure JSON serialization

@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using tree_form_API.Services;
 using tree_form_API.Models;
+using System.Security.Claims;
+using tree_form_API.Constants;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -14,22 +16,41 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
-    [HttpPost("signup")]
-    public async Task<IActionResult> SignUp([FromBody] UserRegistrationDTO userDto)
+    // GET: api/users - Retrieve all users (Admin-only access)
+    [HttpGet]
+    //[Authorize(Policy = "AdminPolicy")]
+    public async Task<IActionResult> GetAllUsers()
     {
-        var user = await _userService.RegisterUser(userDto);
+        var users = await _userService.GetAllUsers();
+        return Ok(users);
+    }
+
+    // POST: api/users/add - Add a new user (Admin-only access)
+    [HttpPost("add")]
+    //[Authorize(Policy = "AdminPolicy")]
+    public async Task<IActionResult> AddUser([FromBody] UserRegistrationDTO userDto)
+    {
+        var user = await _userService.AddUser(userDto);
         if (user == null)
         {
             return BadRequest("User could not be created.");
         }
-        
-        var token = await _userService.AuthenticateUser(new UserLoginDTO
-        {
-            Email = user.Email,
-            Password = userDto.Password
-        });
 
-        return Ok(new { user, Token = token });
+        return Ok(user);
+    }
+
+    // DELETE: api/users/{id} - Delete a user by ID (Admin-only access)
+    [HttpDelete("{id}")]
+    //[Authorize(Policy = "AdminPolicy")]
+    public async Task<IActionResult> DeleteUser(string id)
+    {
+        var success = await _userService.DeleteUser(id);
+        if (!success)
+        {
+            return NotFound("User not found.");
+        }
+
+        return NoContent(); // 204 No Content
     }
 
     [HttpPost("signin")]
@@ -96,4 +117,12 @@ public class UsersController : ControllerBase
 
         return Ok("Password updated successfully.");
     }
+
+    [HttpGet("roles")]
+    public IActionResult GetUserRoles()
+    {
+        var roles = new[] { UserRoles.Admin, UserRoles.Read, UserRoles.ReadWrite };
+        return Ok(roles);
+    }
+
 }

@@ -18,5 +18,8 @@ namespace tree_form_API.Models
 
         [BsonElement("PasswordHash")]
         public string PasswordHash { get; set; }
+
+        [BsonElement("Role")]
+        public string Role { get; set; } = "read"; // Default role is 'read'
     }
 }
