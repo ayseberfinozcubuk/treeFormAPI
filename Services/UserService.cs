@@ -120,6 +120,16 @@ namespace tree_form_API.Services
             return result.ModifiedCount > 0; // Returns true if update was successful
         }
     
+        public async Task<bool> UpdateUserRole(string userId, string newRole)
+        {
+            var updateDefinition = Builders<User>.Update.Set(u => u.Role, newRole);
+            var result = await _userCollection.UpdateOneAsync(
+                u => u.Id == userId,
+                updateDefinition);
+
+            return result.ModifiedCount > 0; // Returns true if update was successful
+        }
+
         public async Task<User?> GetUserById(string id)
         {
             return await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();

@@ -121,6 +121,20 @@ public class UsersController : ControllerBase
         return Ok("Password updated successfully.");
     }
 
+    [HttpPut("{id}/role")]
+    //[Authorize(Policy = "AdminPolicy")] // Ensure only admins can update roles
+    public async Task<IActionResult> UpdateUserRole(string id, [FromBody] UserRoleUpdateDTO roleUpdateDto)
+    {
+        var success = await _userService.UpdateUserRole(id, roleUpdateDto.Role);
+        
+        if (!success)
+        {
+            return NotFound("User not found.");
+        }
+
+        return Ok("User role updated successfully.");
+    }
+
     [HttpGet("roles")]
     //[AllowAnonymous]
     public IActionResult GetUserRoles()
