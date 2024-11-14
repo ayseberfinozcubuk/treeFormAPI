@@ -30,7 +30,9 @@ public class UsersController : ControllerBase
     //[Authorize(Policy = "AdminPolicy")]
     public async Task<IActionResult> AddUser([FromBody] UserRegistrationDTO userDto)
     {
+        Console.WriteLine("userDto: ", userDto);
         var user = await _userService.AddUser(userDto);
+        Console.WriteLine("user: ", user);
         if (user == null)
         {
             return BadRequest("User could not be created.");
@@ -68,7 +70,8 @@ public class UsersController : ControllerBase
         {
             Id = user.Id,
             UserName = user.UserName,
-            Email = user.Email
+            Email = user.Email,
+            Role = user.Role,
         };
 
         return Ok(new { User = userResponse, Token = token });
@@ -119,6 +122,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("roles")]
+    //[AllowAnonymous]
     public IActionResult GetUserRoles()
     {
         var roles = new[] { UserRoles.Admin, UserRoles.Read, UserRoles.ReadWrite };
