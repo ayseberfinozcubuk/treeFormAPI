@@ -65,6 +65,17 @@ public class UsersController : ControllerBase
             return Unauthorized("Invalid credentials.");
         }
 
+        // Set the token as a secure HTTP-only cookie
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true, // Prevent JavaScript access
+            Secure = true,   // Send over HTTPS only; set to false during development if not using HTTPS
+            SameSite = SameSiteMode.Lax, // Adjust to None if cross-origin requests are needed
+            Expires = DateTime.UtcNow.AddHours(72) // Set token expiration
+        };
+
+        Response.Cookies.Append("authToken", token, cookieOptions);
+
         var user = await _userService.GetUserByEmail(loginDto.Email);
         var userResponse = new UserResponseDTO
         {
@@ -74,7 +85,7 @@ public class UsersController : ControllerBase
             Role = user.Role,
         };
 
-        return Ok(new { User = userResponse, Token = token });
+        return Ok(new { User = userResponse });
     }
 
     [HttpPut("{id}")]
@@ -143,4 +154,40 @@ public class UsersController : ControllerBase
         return Ok(roles);
     }
 
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        // Clear the authToken cookie
+        Response.Cookies.Delete("authToken");
+        return Ok("Logged out successfully");
+    }
+
+    [HttpGet("check-auth")]
+    public IActionResult CheckAuth()
+    {
+        var authCookie = Request.Cookies["authToken"];
+        if (string.IsNullOrEmpty(authCookie))
+        {
+            return Unauthorized("Authentication token is missing.");
+        }
+
+        //var isValid = ValidateJwtToken(authCookie); // Implement your token validation logic
+        //if (!isValid)
+        //{
+        //    return Unauthorized("Invalid or expired token.");
+        //}
+
+        return Ok("Authenticated");
+    }
+
+    [HttpGet("get-role")]
+    public IActionResult GetRole()
+    {
+        if (HttpContext.User.Identity.IsAuthenticated)
+        {
+            var role = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
+            return Ok(new { role });
+        }
+        return Unauthorized();
+    }
 }

@@ -49,13 +49,24 @@ namespace tree_form_API.Services
 
         public async Task<string?> AuthenticateUser(UserLoginDTO loginDto)
         {
+            // Retrieve the user by email
             var user = await _userCollection.Find(u => u.Email == loginDto.Email).FirstOrDefaultAsync();
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+            // Check if user exists
+            if (user == null)
             {
-                return null; // Authentication failed
+                Console.WriteLine($"Authentication failed: No user found with email {loginDto.Email}");
+                return null;
             }
 
+            // Verify password
+            if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+            {
+                Console.WriteLine($"Authentication failed: Incorrect password for user {loginDto.Email}");
+                return null;
+            }
+
+            // Generate a JWT token for the authenticated user
             return GenerateJwtToken(user);
         }
 
@@ -65,19 +76,24 @@ namespace tree_form_API.Services
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
+            // Claims for the token
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role) // Add user role
+                new Claim(ClaimTypes.Role, user.Role) // Include user role
             };
+
+            // Calculate expiration dynamically
+            var expiresInHours = Convert.ToDouble(jwtSettings["ExpiresInHours"]);
+            var tokenExpiration = DateTime.UtcNow.AddHours(expiresInHours);
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(Convert.ToDouble(jwtSettings["ExpiresInHours"])),
+                expires: tokenExpiration,
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
