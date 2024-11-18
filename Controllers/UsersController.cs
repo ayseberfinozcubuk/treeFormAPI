@@ -25,6 +25,24 @@ public class UsersController : ControllerBase
         return Ok(users);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetUserById(string id)
+    {
+        var user = await _userService.GetUserById(id);
+        if (user == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        return Ok(new UserResponseDTO
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            Email = user.Email,
+            Role = user.Role
+        });
+    }
+
     // POST: api/users/add - Add a new user (Admin-only access)
     [HttpPost("add")]
     //[Authorize(Policy = "AdminPolicy")]
