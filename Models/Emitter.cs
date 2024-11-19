@@ -22,6 +22,8 @@ namespace tree_form_API.Models
         [BsonId]
         [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
+        //[BsonId]
+        //[BsonRepresentation(BsonType.String)]
         public Guid EmitterId { get; set; }
         public string ModeName { get; set; } = string.Empty; // Mode Adı
         public double? AmplitudeMin { get; set; } // Genlik (minivolt)

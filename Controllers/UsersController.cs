@@ -122,7 +122,7 @@ public class UsersController : ControllerBase
     [HttpPut("{id}/change-password")]
     public async Task<IActionResult> ChangePassword(string id, [FromBody] ChangePasswordDTO changePasswordDto)
     {
-        var user = await _userService.GetUserById(id); // Implement this method if not present
+        var user = await _userService.GetUserById(id); // Retrieve the user
         if (user == null)
         {
             return NotFound("User not found.");
@@ -134,13 +134,19 @@ public class UsersController : ControllerBase
             return Unauthorized("Current password is incorrect.");
         }
 
+        // Prevent the new password from being the same as the current password
+        if (BCrypt.Net.BCrypt.Verify(changePasswordDto.NewPassword, user.PasswordHash))
+        {
+            return BadRequest("New password cannot be the same as the current password.");
+        }
+
         // Check new password confirmation
         if (changePasswordDto.NewPassword != changePasswordDto.ConfirmNewPassword)
         {
             return BadRequest("New password and confirmation do not match.");
         }
 
-        // Update password
+        // Update the password
         var success = await _userService.UpdatePassword(id, changePasswordDto.NewPassword);
         if (!success)
         {
@@ -149,16 +155,30 @@ public class UsersController : ControllerBase
 
         return Ok("Password updated successfully.");
     }
-
+    
     [HttpPut("{id}/role")]
     //[Authorize(Policy = "AdminPolicy")] // Ensure only admins can update roles
     public async Task<IActionResult> UpdateUserRole(string id, [FromBody] UserRoleUpdateDTO roleUpdateDto)
     {
-        var success = await _userService.UpdateUserRole(id, roleUpdateDto.Role);
-        
-        if (!success)
+        // Get the current user
+        var user = await _userService.GetUserById(id);
+        if (user == null)
         {
             return NotFound("User not found.");
+        }
+
+        // Check if the new role is the same as the current role
+        if (user.Role == roleUpdateDto.Role)
+        {
+            return Ok("The role is already set to the specified value. No changes made.");
+        }
+
+        // Proceed to update the role
+        var success = await _userService.UpdateUserRole(id, roleUpdateDto.Role);
+
+        if (!success)
+        {
+            return StatusCode(500, "An error occurred while updating the user role.");
         }
 
         return Ok("User role updated successfully.");
