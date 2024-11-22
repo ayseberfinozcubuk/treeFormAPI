@@ -4,6 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace tree_form_API.Models
 {
+    [BsonIgnoreExtraElements]
     public class User
     {
         [BsonId]
@@ -21,5 +22,7 @@ namespace tree_form_API.Models
 
         [BsonElement("Role")]
         public string Role { get; set; } = "read"; // Default role is 'read'
+
+        public string? UpdatedBy { get; set; }
     }
 }
