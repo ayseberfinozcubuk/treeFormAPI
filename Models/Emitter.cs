@@ -15,6 +15,7 @@ namespace tree_form_API.Models
         public string? Function { get; set; } // Görev Kodu
         public int? NumberOfModes { get; set; } // Mod Sayısı
         public List<EmitterMode> Modes { get; set; } = new List<EmitterMode>(); // Emiter Mod Listesi
+        public string? UpdatedBy { get; set; }
     }
 
     public class EmitterMode : IIdentifiable

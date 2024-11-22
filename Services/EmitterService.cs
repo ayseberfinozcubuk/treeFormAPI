@@ -44,303 +44,181 @@ namespace tree_form_API.Services
             if (existingEmitter == null)
                 throw new InvalidOperationException($"Emitter with ID {id} not found.");
 
-            var updates = new List<UpdateDefinition<Emitter>>();
+            // Update top-level properties
+            UpdateTopLevelProperties(existingEmitter, updatedEmitter);
 
-            AddUpdateIfChanged(updates, existingEmitter.Notation, updatedEmitter.Notation, e => e.Notation);
-            AddUpdateIfChanged(updates, existingEmitter.EmitterName, updatedEmitter.EmitterName, e => e.EmitterName);
-            AddUpdateIfChanged(updates, existingEmitter.SpotNo, updatedEmitter.SpotNo, e => e.SpotNo);
-            AddUpdateIfChanged(updates, existingEmitter.Function, updatedEmitter.Function, e => e.Function);
-            AddUpdateIfChanged(updates, existingEmitter.NumberOfModes, updatedEmitter.NumberOfModes, e => e.NumberOfModes);
-
-            // Synchronize Modes
-            SynchronizeNestedList(
-                updates,
+            // Update Modes collection
+            SynchronizeCollection(
                 existingEmitter.Modes,
                 updatedEmitter.Modes,
-                e => e.Modes,
-                (existingMode, updatedMode, modeIndex) => SynchronizeMode(updates, existingMode, updatedMode, modeIndex)
+                UpdateMode
             );
 
-            if (updates.Count > 0)
-            {
-                var filter = Builders<Emitter>.Filter.Eq(e => e.Id, id);
-                var updateDefinition = Builders<Emitter>.Update.Combine(updates);
-                var result = await _emitterCollection.UpdateOneAsync(filter, updateDefinition);
-
-                if (result.MatchedCount == 0)
-                    throw new InvalidOperationException($"Emitter with ID {id} not found.");
-            }
+            // Apply the updated emitter to the database
+            var filter = Builders<Emitter>.Filter.Eq(e => e.Id, id);
+            await _emitterCollection.ReplaceOneAsync(filter, existingEmitter);
         }
 
-        private void AddUpdateIfChanged<T>(List<UpdateDefinition<Emitter>> updates, T existingValue, T updatedValue, Expression<Func<Emitter, T>> field)
+        private void UpdateTopLevelProperties(Emitter existingEmitter, Emitter updatedEmitter)
         {
-            if (!EqualityComparer<T>.Default.Equals(existingValue, updatedValue))
-                updates.Add(Builders<Emitter>.Update.Set(field, updatedValue));
+            if (!Equals(existingEmitter.Notation, updatedEmitter.Notation))
+                existingEmitter.Notation = updatedEmitter.Notation;
+
+            if (!Equals(existingEmitter.EmitterName, updatedEmitter.EmitterName))
+                existingEmitter.EmitterName = updatedEmitter.EmitterName;
+
+            if (!Equals(existingEmitter.SpotNo, updatedEmitter.SpotNo))
+                existingEmitter.SpotNo = updatedEmitter.SpotNo;
+
+            if (!Equals(existingEmitter.Function, updatedEmitter.Function))
+                existingEmitter.Function = updatedEmitter.Function;
+
+            if (!Equals(existingEmitter.NumberOfModes, updatedEmitter.NumberOfModes))
+                existingEmitter.NumberOfModes = updatedEmitter.NumberOfModes;
         }
 
-        private void SynchronizeNestedList<T>(
-            List<UpdateDefinition<Emitter>> updates,
-            List<T> existingList,
-            List<T> updatedList,
-            Expression<Func<Emitter, IEnumerable<T>>> listField,
-            Action<T, T, int> synchronizeNestedFields) where T : class
+        private void UpdateMode(EmitterMode existingMode, EmitterMode updatedMode)
         {
-            if (updatedList.Count < existingList.Count)
-            {
-                updates.Add(Builders<Emitter>.Update.Set(listField, updatedList));
-                return;
-            }
+            if (!Equals(existingMode.ModeName, updatedMode.ModeName))
+                existingMode.ModeName = updatedMode.ModeName;
 
-            for (int i = 0; i < updatedList.Count; i++)
+            if (!Equals(existingMode.AmplitudeMin, updatedMode.AmplitudeMin))
+                existingMode.AmplitudeMin = updatedMode.AmplitudeMin;
+
+            if (!Equals(existingMode.AmplitudeMax, updatedMode.AmplitudeMax))
+                existingMode.AmplitudeMax = updatedMode.AmplitudeMax;
+
+            if (!Equals(existingMode.TheoricalRangeMin, updatedMode.TheoricalRangeMin))
+                existingMode.TheoricalRangeMin = updatedMode.TheoricalRangeMin;
+
+            if (!Equals(existingMode.TheoricalRangeMax, updatedMode.TheoricalRangeMax))
+                existingMode.TheoricalRangeMax = updatedMode.TheoricalRangeMax;
+
+            // Update Beams and Pris within the Mode
+            SynchronizeCollection(
+                existingMode.Beams,
+                updatedMode.Beams,
+                UpdateBeam
+            );
+
+            SynchronizeCollection(
+                existingMode.Pris,
+                updatedMode.Pris,
+                UpdatePri
+            );
+        }
+
+        private void UpdateBeam(EmitterModeBeam existingBeam, EmitterModeBeam updatedBeam)
+        {
+            if (!Equals(existingBeam.BeamName, updatedBeam.BeamName))
+                existingBeam.BeamName = updatedBeam.BeamName;
+
+            if (!Equals(existingBeam.AntennaGainMin, updatedBeam.AntennaGainMin))
+                existingBeam.AntennaGainMin = updatedBeam.AntennaGainMin;
+
+            if (!Equals(existingBeam.AntennaGainMax, updatedBeam.AntennaGainMax))
+                existingBeam.AntennaGainMax = updatedBeam.AntennaGainMax;
+
+            if (!Equals(existingBeam.BeamPositionMin, updatedBeam.BeamPositionMin))
+                existingBeam.BeamPositionMin = updatedBeam.BeamPositionMin;
+
+            if (!Equals(existingBeam.BeamPositionMax, updatedBeam.BeamPositionMax))
+                existingBeam.BeamPositionMax = updatedBeam.BeamPositionMax;
+
+            // Update nested collections in Beam
+            SynchronizeCollection(
+                existingBeam.DwellDurationValues,
+                updatedBeam.DwellDurationValues,
+                UpdateDwellDuration
+            );
+        }
+
+        private void UpdateDwellDuration(EmitterModeBeamPositionDwellDurationValue existingDwell, EmitterModeBeamPositionDwellDurationValue updatedDwell)
+        {
+            if (!Equals(existingDwell.BeamWPositionDurationMin, updatedDwell.BeamWPositionDurationMin))
+                existingDwell.BeamWPositionDurationMin = updatedDwell.BeamWPositionDurationMin;
+
+            if (!Equals(existingDwell.BeamWPositionDurationMax, updatedDwell.BeamWPositionDurationMax))
+                existingDwell.BeamWPositionDurationMax = updatedDwell.BeamWPositionDurationMax;
+
+            if (!Equals(existingDwell.BeamWPositionIndex, updatedDwell.BeamWPositionIndex))
+                existingDwell.BeamWPositionIndex = updatedDwell.BeamWPositionIndex;
+
+            // Update Firing Orders within Dwell Duration
+            SynchronizeCollection(
+                existingDwell.FiringOrders,
+                updatedDwell.FiringOrders,
+                UpdateFiringOrder
+            );
+        }
+
+        private void UpdateFiringOrder(EmitterModeBeamPositionFiringOrder existingOrder, EmitterModeBeamPositionFiringOrder updatedOrder)
+        {
+            if (!Equals(existingOrder.BeamPositionOrderIndexMin, updatedOrder.BeamPositionOrderIndexMin))
+                existingOrder.BeamPositionOrderIndexMin = updatedOrder.BeamPositionOrderIndexMin;
+
+            if (!Equals(existingOrder.BeamPositionOrderIndexMax, updatedOrder.BeamPositionOrderIndexMax))
+                existingOrder.BeamPositionOrderIndexMax = updatedOrder.BeamPositionOrderIndexMax;
+
+            if (!Equals(existingOrder.ElevationMin, updatedOrder.ElevationMin))
+                existingOrder.ElevationMin = updatedOrder.ElevationMin;
+
+            if (!Equals(existingOrder.ElevationMax, updatedOrder.ElevationMax))
+                existingOrder.ElevationMax = updatedOrder.ElevationMax;
+        }
+
+        private void UpdatePri(EmitterModePri existingPri, EmitterModePri updatedPri)
+        {
+            if (!Equals(existingPri.PriName, updatedPri.PriName))
+                existingPri.PriName = updatedPri.PriName;
+
+            if (!Equals(existingPri.PriLimitMin, updatedPri.PriLimitMin))
+                existingPri.PriLimitMin = updatedPri.PriLimitMin;
+
+            if (!Equals(existingPri.PriLimitMax, updatedPri.PriLimitMax))
+                existingPri.PriLimitMax = updatedPri.PriLimitMax;
+
+            // Update nested collections in Pri
+            SynchronizeCollection(
+                existingPri.SuperPeriods,
+                updatedPri.SuperPeriods,
+                UpdateSuperPeriod
+            );
+        }
+
+        private void UpdateSuperPeriod(EmitterModePriSuperPeriodValue existingSuper, EmitterModePriSuperPeriodValue updatedSuper)
+        {
+            if (!Equals(existingSuper.SuperPeriodValueMin, updatedSuper.SuperPeriodValueMin))
+                existingSuper.SuperPeriodValueMin = updatedSuper.SuperPeriodValueMin;
+
+            if (!Equals(existingSuper.SuperPeriodValueMax, updatedSuper.SuperPeriodValueMax))
+                existingSuper.SuperPeriodValueMax = updatedSuper.SuperPeriodValueMax;
+        }
+
+        // Helper function to synchronize collections
+        private void SynchronizeCollection<T>(
+            List<T> existingCollection,
+            List<T> updatedCollection,
+            Action<T, T> updateItemAction) where T : class, new()
+        {
+            // Update or Add items
+            for (int i = 0; i < updatedCollection.Count; i++)
             {
-                if (i >= existingList.Count)
+                if (i < existingCollection.Count)
                 {
-                    updates.Add(Builders<Emitter>.Update.Push(listField, updatedList[i]));
+                    updateItemAction(existingCollection[i], updatedCollection[i]);
                 }
                 else
                 {
-                    synchronizeNestedFields(existingList[i], updatedList[i], i);
+                    existingCollection.Add(updatedCollection[i]);
                 }
             }
-        }
 
-        private void SynchronizeMode(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterMode existingMode,
-            EmitterMode updatedMode,
-            int modeIndex)
-        {
-            AddUpdateIfChanged(updates, existingMode.ModeName, updatedMode.ModeName, e => e.Modes[modeIndex].ModeName);
-            AddUpdateIfChanged(updates, existingMode.AmplitudeMin, updatedMode.AmplitudeMin, e => e.Modes[modeIndex].AmplitudeMin);
-            AddUpdateIfChanged(updates, existingMode.AmplitudeMax, updatedMode.AmplitudeMax, e => e.Modes[modeIndex].AmplitudeMax);
-            AddUpdateIfChanged(updates, existingMode.TheoricalRangeMin, updatedMode.TheoricalRangeMin, e => e.Modes[modeIndex].TheoricalRangeMin);
-            AddUpdateIfChanged(updates, existingMode.TheoricalRangeMax, updatedMode.TheoricalRangeMax, e => e.Modes[modeIndex].TheoricalRangeMax);
-
-            SynchronizeNestedList(
-                updates,
-                existingMode.Beams,
-                updatedMode.Beams,
-                e => e.Modes[modeIndex].Beams,
-                (existingBeam, updatedBeam, beamIndex) => SynchronizeBeam(updates, existingBeam, updatedBeam, modeIndex, beamIndex)
-            );
-
-            SynchronizeNestedList(
-                updates,
-                existingMode.Pris,
-                updatedMode.Pris,
-                e => e.Modes[modeIndex].Pris,
-                (existingPri, updatedPri, priIndex) => SynchronizePri(updates, existingPri, updatedPri, modeIndex, priIndex)
-            );
-        }
-
-        private void SynchronizeBeam(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterModeBeam existingBeam,
-            EmitterModeBeam updatedBeam,
-            int modeIndex,
-            int beamIndex)
-        {
-            AddUpdateIfChanged(updates, existingBeam.BeamName, updatedBeam.BeamName, e => e.Modes[modeIndex].Beams[beamIndex].BeamName);
-            AddUpdateIfChanged(updates, existingBeam.AntennaGainMin, updatedBeam.AntennaGainMin, e => e.Modes[modeIndex].Beams[beamIndex].AntennaGainMin);
-            AddUpdateIfChanged(updates, existingBeam.AntennaGainMax, updatedBeam.AntennaGainMax, e => e.Modes[modeIndex].Beams[beamIndex].AntennaGainMax);
-            AddUpdateIfChanged(updates, existingBeam.BeamPositionMin, updatedBeam.BeamPositionMin, e => e.Modes[modeIndex].Beams[beamIndex].BeamPositionMin);
-            AddUpdateIfChanged(updates, existingBeam.BeamPositionMax, updatedBeam.BeamPositionMax, e => e.Modes[modeIndex].Beams[beamIndex].BeamPositionMax);
-            AddUpdateIfChanged(updates, existingBeam.BeamWidthAzimuteMin, updatedBeam.BeamWidthAzimuteMin, e => e.Modes[modeIndex].Beams[beamIndex].BeamWidthAzimuteMin);
-            AddUpdateIfChanged(updates, existingBeam.BeamWidthAzimuteMax, updatedBeam.BeamWidthAzimuteMax, e => e.Modes[modeIndex].Beams[beamIndex].BeamWidthAzimuteMax);
-            AddUpdateIfChanged(updates, existingBeam.BeamWidthElevationMin, updatedBeam.BeamWidthElevationMin, e => e.Modes[modeIndex].Beams[beamIndex].BeamWidthElevationMin);
-            AddUpdateIfChanged(updates, existingBeam.BeamWidthElevationMax, updatedBeam.BeamWidthElevationMax, e => e.Modes[modeIndex].Beams[beamIndex].BeamWidthElevationMax);
-
-            SynchronizeNestedList(
-                updates,
-                existingBeam.DwellDurationValues,
-                updatedBeam.DwellDurationValues,
-                e => e.Modes[modeIndex].Beams[beamIndex].DwellDurationValues,
-                (existingDwell, updatedDwell, dwellIndex) => SynchronizeDwellDuration(updates, existingDwell, updatedDwell, modeIndex, beamIndex, dwellIndex)
-            );
-
-            SynchronizeNestedList(
-                updates,
-                existingBeam.Sequences,
-                updatedBeam.Sequences,
-                e => e.Modes[modeIndex].Beams[beamIndex].Sequences,
-                (existingSequence, updatedSequence, seqIndex) => SynchronizeBeamSequence(updates, existingSequence, updatedSequence, modeIndex, beamIndex, seqIndex)
-            );
-        }
-
-        private void SynchronizeDwellDuration(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterModeBeamPositionDwellDurationValue existingDwell,
-            EmitterModeBeamPositionDwellDurationValue updatedDwell,
-            int modeIndex,
-            int beamIndex,
-            int dwellIndex)
-        {
-            AddUpdateIfChanged(updates, existingDwell.BeamWPositionDurationMin, updatedDwell.BeamWPositionDurationMin, e => e.Modes[modeIndex].Beams[beamIndex].DwellDurationValues[dwellIndex].BeamWPositionDurationMin);
-            AddUpdateIfChanged(updates, existingDwell.BeamWPositionDurationMax, updatedDwell.BeamWPositionDurationMax, e => e.Modes[modeIndex].Beams[beamIndex].DwellDurationValues[dwellIndex].BeamWPositionDurationMax);
-            AddUpdateIfChanged(updates, existingDwell.BeamWPositionIndex, updatedDwell.BeamWPositionIndex, e => e.Modes[modeIndex].Beams[beamIndex].DwellDurationValues[dwellIndex].BeamWPositionIndex);
-
-            SynchronizeNestedList(
-                updates,
-                existingDwell.FiringOrders,
-                updatedDwell.FiringOrders,
-                e => e.Modes[modeIndex].Beams[beamIndex].DwellDurationValues[dwellIndex].FiringOrders,
-                (existingOrder, updatedOrder, orderIndex) => SynchronizeFiringOrder(updates, existingOrder, updatedOrder, modeIndex, beamIndex, dwellIndex, orderIndex)
-            );
-        }
-
-        private void SynchronizeFiringOrder(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterModeBeamPositionFiringOrder existingOrder,
-            EmitterModeBeamPositionFiringOrder updatedOrder,
-            int modeIndex,
-            int beamIndex,
-            int seqIndex,
-            int orderIndex)
-        {
-            AddUpdateIfChanged(updates, existingOrder.BeamPositionOrderIndexMin, updatedOrder.BeamPositionOrderIndexMin, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionOrderIndexMin);
-            AddUpdateIfChanged(updates, existingOrder.BeamPositionOrderIndexMax, updatedOrder.BeamPositionOrderIndexMax, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionOrderIndexMax);
-            AddUpdateIfChanged(updates, existingOrder.BeamPositionIndexMin, updatedOrder.BeamPositionIndexMin, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionIndexMin);
-            AddUpdateIfChanged(updates, existingOrder.BeamPositionIndexMax, updatedOrder.BeamPositionIndexMax, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders[orderIndex].BeamPositionIndexMax);
-        }
-
-        private void SynchronizeBeamSequence(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterModeBeamPositionSequence existingSequence,
-            EmitterModeBeamPositionSequence updatedSequence,
-            int modeIndex,
-            int beamIndex,
-            int seqIndex)
-        {
-            AddUpdateIfChanged(updates, existingSequence.SequenceName, updatedSequence.SequenceName, e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].SequenceName);
-
-            SynchronizeNestedList(
-                updates,
-                existingSequence.FiringOrders,
-                updatedSequence.FiringOrders,
-                e => e.Modes[modeIndex].Beams[beamIndex].Sequences[seqIndex].FiringOrders,
-                (existingOrder, updatedOrder, orderIndex) => SynchronizeFiringOrder(updates, existingOrder, updatedOrder, modeIndex, beamIndex, seqIndex, orderIndex)
-            );
-        }
-
-        private void SynchronizePri(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterModePri existingPri,
-            EmitterModePri updatedPri,
-            int modeIndex,
-            int priIndex)
-        {
-            AddUpdateIfChanged(updates, existingPri.PriName, updatedPri.PriName, e => e.Modes[modeIndex].Pris[priIndex].PriName);
-            AddUpdateIfChanged(updates, existingPri.PriLimitMin, updatedPri.PriLimitMin, e => e.Modes[modeIndex].Pris[priIndex].PriLimitMin);
-            AddUpdateIfChanged(updates, existingPri.PriLimitMax, updatedPri.PriLimitMax, e => e.Modes[modeIndex].Pris[priIndex].PriLimitMax);
-
-            SynchronizeNestedList(
-                updates,
-                existingPri.SuperPeriods,
-                updatedPri.SuperPeriods,
-                e => e.Modes[modeIndex].Pris[priIndex].SuperPeriods,
-                (existingSuperPeriod, updatedSuperPeriod, superPeriodIndex) => SynchronizeSuperPeriod(updates, existingSuperPeriod, updatedSuperPeriod, modeIndex, priIndex, superPeriodIndex)
-            );
-
-            SynchronizeNestedList(
-                updates,
-                existingPri.MostProbableValues,
-                updatedPri.MostProbableValues,
-                e => e.Modes[modeIndex].Pris[priIndex].MostProbableValues,
-                (existingMostProbable, updatedMostProbable, mostProbableIndex) => SynchronizeMostProbableValue(updates, existingMostProbable, updatedMostProbable, modeIndex, priIndex, mostProbableIndex)
-            );
-
-            SynchronizeNestedList(
-                updates,
-                existingPri.DiscreteValues,
-                updatedPri.DiscreteValues,
-                e => e.Modes[modeIndex].Pris[priIndex].DiscreteValues,
-                (existingDiscrete, updatedDiscrete, discreteIndex) => SynchronizeDiscreteValue(updates, existingDiscrete, updatedDiscrete, modeIndex, priIndex, discreteIndex)
-            );
-
-            SynchronizeNestedList(
-                updates,
-                existingPri.Sequences,
-                updatedPri.Sequences,
-                e => e.Modes[modeIndex].Pris[priIndex].Sequences,
-                (existingSequence, updatedSequence, seqIndex) => SynchronizePriSequence(updates, existingSequence, updatedSequence, modeIndex, priIndex, seqIndex)
-            );
-        }
-
-        private void SynchronizeSuperPeriod(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterModePriSuperPeriodValue existingSuperPeriod,
-            EmitterModePriSuperPeriodValue updatedSuperPeriod,
-            int modeIndex,
-            int priIndex,
-            int superPeriodIndex)
-        {
-            AddUpdateIfChanged(updates, existingSuperPeriod.SuperPeriodValueMin, updatedSuperPeriod.SuperPeriodValueMin, e => e.Modes[modeIndex].Pris[priIndex].SuperPeriods[superPeriodIndex].SuperPeriodValueMin);
-            AddUpdateIfChanged(updates, existingSuperPeriod.SuperPeriodValueMax, updatedSuperPeriod.SuperPeriodValueMax, e => e.Modes[modeIndex].Pris[priIndex].SuperPeriods[superPeriodIndex].SuperPeriodValueMax);
-        }
-
-        private void SynchronizeMostProbableValue(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterModePriMostProbableValue existingMostProbable,
-            EmitterModePriMostProbableValue updatedMostProbable,
-            int modeIndex,
-            int priIndex,
-            int mostProbableIndex)
-        {
-            AddUpdateIfChanged(updates, existingMostProbable.MostProbableValueMin, updatedMostProbable.MostProbableValueMin, e => e.Modes[modeIndex].Pris[priIndex].MostProbableValues[mostProbableIndex].MostProbableValueMin);
-            AddUpdateIfChanged(updates, existingMostProbable.MostProbableValueMax, updatedMostProbable.MostProbableValueMax, e => e.Modes[modeIndex].Pris[priIndex].MostProbableValues[mostProbableIndex].MostProbableValueMax);
-        }
-
-        private void SynchronizeDiscreteValue(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterModePriDiscreteValue existingDiscrete,
-            EmitterModePriDiscreteValue updatedDiscrete,
-            int modeIndex,
-            int priIndex,
-            int discreteIndex)
-        {
-            AddUpdateIfChanged(updates, existingDiscrete.DiscreteValueMin, updatedDiscrete.DiscreteValueMin, e => e.Modes[modeIndex].Pris[priIndex].DiscreteValues[discreteIndex].DiscreteValueMin);
-            AddUpdateIfChanged(updates, existingDiscrete.DiscreteValueMax, updatedDiscrete.DiscreteValueMax, e => e.Modes[modeIndex].Pris[priIndex].DiscreteValues[discreteIndex].DiscreteValueMax);
-
-            SynchronizeNestedList(
-                updates,
-                existingDiscrete.FiringOrders,
-                updatedDiscrete.FiringOrders,
-                e => e.Modes[modeIndex].Pris[priIndex].DiscreteValues[discreteIndex].FiringOrders,
-                (existingOrder, updatedOrder, orderIndex) => SynchronizeFiringOrder(updates, existingOrder, updatedOrder, modeIndex, priIndex, discreteIndex, orderIndex)
-            );
-        }
-
-        private void SynchronizePriSequence(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterModePriSequence existingSequence,
-            EmitterModePriSequence updatedSequence,
-            int modeIndex,
-            int priIndex,
-            int seqIndex)
-        {
-            AddUpdateIfChanged(updates, existingSequence.SequenceName, updatedSequence.SequenceName, e => e.Modes[modeIndex].Pris[priIndex].Sequences[seqIndex].SequenceName);
-            AddUpdateIfChanged(updates, existingSequence.NumberOfPulsesInSequence, updatedSequence.NumberOfPulsesInSequence, e => e.Modes[modeIndex].Pris[priIndex].Sequences[seqIndex].NumberOfPulsesInSequence);
-
-            SynchronizeNestedList(
-                updates,
-                existingSequence.FiringOrders,
-                updatedSequence.FiringOrders,
-                e => e.Modes[modeIndex].Pris[priIndex].Sequences[seqIndex].FiringOrders,
-                (existingOrder, updatedOrder, orderIndex) => SynchronizeFiringOrder(updates, existingOrder, updatedOrder, modeIndex, priIndex, seqIndex, orderIndex)
-            );
-        }
-
-        private void SynchronizeFiringOrder(
-            List<UpdateDefinition<Emitter>> updates,
-            EmitterModePriFiringOrder existingOrder,
-            EmitterModePriFiringOrder updatedOrder,
-            int modeIndex,
-            int priIndex,
-            int seqIndex,
-            int orderIndex)
-        {
-            AddUpdateIfChanged(updates, existingOrder.OrderIndexMin, updatedOrder.OrderIndexMin, e => e.Modes[modeIndex].Pris[priIndex].Sequences[seqIndex].FiringOrders[orderIndex].OrderIndexMin);
-            AddUpdateIfChanged(updates, existingOrder.OrderIndexMax, updatedOrder.OrderIndexMax, e => e.Modes[modeIndex].Pris[priIndex].Sequences[seqIndex].FiringOrders[orderIndex].OrderIndexMax);
+            // Remove excess items
+            while (existingCollection.Count > updatedCollection.Count)
+            {
+                existingCollection.RemoveAt(existingCollection.Count - 1);
+            }
         }
 
         public async Task DeleteAsync(Guid id)
