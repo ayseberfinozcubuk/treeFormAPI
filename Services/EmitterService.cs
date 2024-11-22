@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using System.Collections;
 
 namespace tree_form_API.Services
 {
@@ -44,172 +45,71 @@ namespace tree_form_API.Services
             if (existingEmitter == null)
                 throw new InvalidOperationException($"Emitter with ID {id} not found.");
 
-            // Update top-level properties
-            UpdateTopLevelProperties(existingEmitter, updatedEmitter);
+            // Dynamically update the object
+            UpdateObject(existingEmitter, updatedEmitter);
 
-            // Update Modes collection
-            SynchronizeCollection(
-                existingEmitter.Modes,
-                updatedEmitter.Modes,
-                UpdateMode
-            );
-
-            // Apply the updated emitter to the database
+            // Save updated object to the database
             var filter = Builders<Emitter>.Filter.Eq(e => e.Id, id);
             await _emitterCollection.ReplaceOneAsync(filter, existingEmitter);
         }
 
-        private void UpdateTopLevelProperties(Emitter existingEmitter, Emitter updatedEmitter)
+        private void UpdateObject(object existingObject, object updatedObject)
         {
-            if (!Equals(existingEmitter.Notation, updatedEmitter.Notation))
-                existingEmitter.Notation = updatedEmitter.Notation;
+            if (existingObject == null || updatedObject == null)
+                return;
 
-            if (!Equals(existingEmitter.EmitterName, updatedEmitter.EmitterName))
-                existingEmitter.EmitterName = updatedEmitter.EmitterName;
+            var properties = existingObject.GetType().GetProperties();
 
-            if (!Equals(existingEmitter.SpotNo, updatedEmitter.SpotNo))
-                existingEmitter.SpotNo = updatedEmitter.SpotNo;
+            foreach (var property in properties)
+            {
+                var existingValue = property.GetValue(existingObject);
+                var updatedValue = property.GetValue(updatedObject);
 
-            if (!Equals(existingEmitter.Function, updatedEmitter.Function))
-                existingEmitter.Function = updatedEmitter.Function;
-
-            if (!Equals(existingEmitter.NumberOfModes, updatedEmitter.NumberOfModes))
-                existingEmitter.NumberOfModes = updatedEmitter.NumberOfModes;
+                if (property.PropertyType.GetInterfaces().Contains(typeof(IEnumerable)) && property.PropertyType != typeof(string))
+                {
+                    // Handle collections
+                    UpdateCollection(existingValue as IList, updatedValue as IList, property.PropertyType.GetGenericArguments().FirstOrDefault());
+                }
+                else
+                {
+                    // Handle scalar properties
+                    if (updatedValue == null)
+                    {
+                        // Explicitly set property to null
+                        property.SetValue(existingObject, null);
+                    }
+                    else if (!Equals(existingValue, updatedValue))
+                    {
+                        // Update property if the value has changed
+                        property.SetValue(existingObject, updatedValue);
+                    }
+                }
+            }
         }
 
-        private void UpdateMode(EmitterMode existingMode, EmitterMode updatedMode)
+        private void UpdateCollection(IList? existingCollection, IList? updatedCollection, Type? elementType)
         {
-            if (!Equals(existingMode.ModeName, updatedMode.ModeName))
-                existingMode.ModeName = updatedMode.ModeName;
+            if (existingCollection == null || updatedCollection == null || elementType == null)
+            {
+                if (existingCollection != null && updatedCollection == null)
+                {
+                    // Clear the collection if updatedCollection is null
+                    existingCollection.Clear();
+                }
+                return;
+            }
 
-            if (!Equals(existingMode.AmplitudeMin, updatedMode.AmplitudeMin))
-                existingMode.AmplitudeMin = updatedMode.AmplitudeMin;
-
-            if (!Equals(existingMode.AmplitudeMax, updatedMode.AmplitudeMax))
-                existingMode.AmplitudeMax = updatedMode.AmplitudeMax;
-
-            if (!Equals(existingMode.TheoricalRangeMin, updatedMode.TheoricalRangeMin))
-                existingMode.TheoricalRangeMin = updatedMode.TheoricalRangeMin;
-
-            if (!Equals(existingMode.TheoricalRangeMax, updatedMode.TheoricalRangeMax))
-                existingMode.TheoricalRangeMax = updatedMode.TheoricalRangeMax;
-
-            // Update Beams and Pris within the Mode
-            SynchronizeCollection(
-                existingMode.Beams,
-                updatedMode.Beams,
-                UpdateBeam
-            );
-
-            SynchronizeCollection(
-                existingMode.Pris,
-                updatedMode.Pris,
-                UpdatePri
-            );
-        }
-
-        private void UpdateBeam(EmitterModeBeam existingBeam, EmitterModeBeam updatedBeam)
-        {
-            if (!Equals(existingBeam.BeamName, updatedBeam.BeamName))
-                existingBeam.BeamName = updatedBeam.BeamName;
-
-            if (!Equals(existingBeam.AntennaGainMin, updatedBeam.AntennaGainMin))
-                existingBeam.AntennaGainMin = updatedBeam.AntennaGainMin;
-
-            if (!Equals(existingBeam.AntennaGainMax, updatedBeam.AntennaGainMax))
-                existingBeam.AntennaGainMax = updatedBeam.AntennaGainMax;
-
-            if (!Equals(existingBeam.BeamPositionMin, updatedBeam.BeamPositionMin))
-                existingBeam.BeamPositionMin = updatedBeam.BeamPositionMin;
-
-            if (!Equals(existingBeam.BeamPositionMax, updatedBeam.BeamPositionMax))
-                existingBeam.BeamPositionMax = updatedBeam.BeamPositionMax;
-
-            // Update nested collections in Beam
-            SynchronizeCollection(
-                existingBeam.DwellDurationValues,
-                updatedBeam.DwellDurationValues,
-                UpdateDwellDuration
-            );
-        }
-
-        private void UpdateDwellDuration(EmitterModeBeamPositionDwellDurationValue existingDwell, EmitterModeBeamPositionDwellDurationValue updatedDwell)
-        {
-            if (!Equals(existingDwell.BeamWPositionDurationMin, updatedDwell.BeamWPositionDurationMin))
-                existingDwell.BeamWPositionDurationMin = updatedDwell.BeamWPositionDurationMin;
-
-            if (!Equals(existingDwell.BeamWPositionDurationMax, updatedDwell.BeamWPositionDurationMax))
-                existingDwell.BeamWPositionDurationMax = updatedDwell.BeamWPositionDurationMax;
-
-            if (!Equals(existingDwell.BeamWPositionIndex, updatedDwell.BeamWPositionIndex))
-                existingDwell.BeamWPositionIndex = updatedDwell.BeamWPositionIndex;
-
-            // Update Firing Orders within Dwell Duration
-            SynchronizeCollection(
-                existingDwell.FiringOrders,
-                updatedDwell.FiringOrders,
-                UpdateFiringOrder
-            );
-        }
-
-        private void UpdateFiringOrder(EmitterModeBeamPositionFiringOrder existingOrder, EmitterModeBeamPositionFiringOrder updatedOrder)
-        {
-            if (!Equals(existingOrder.BeamPositionOrderIndexMin, updatedOrder.BeamPositionOrderIndexMin))
-                existingOrder.BeamPositionOrderIndexMin = updatedOrder.BeamPositionOrderIndexMin;
-
-            if (!Equals(existingOrder.BeamPositionOrderIndexMax, updatedOrder.BeamPositionOrderIndexMax))
-                existingOrder.BeamPositionOrderIndexMax = updatedOrder.BeamPositionOrderIndexMax;
-
-            if (!Equals(existingOrder.ElevationMin, updatedOrder.ElevationMin))
-                existingOrder.ElevationMin = updatedOrder.ElevationMin;
-
-            if (!Equals(existingOrder.ElevationMax, updatedOrder.ElevationMax))
-                existingOrder.ElevationMax = updatedOrder.ElevationMax;
-        }
-
-        private void UpdatePri(EmitterModePri existingPri, EmitterModePri updatedPri)
-        {
-            if (!Equals(existingPri.PriName, updatedPri.PriName))
-                existingPri.PriName = updatedPri.PriName;
-
-            if (!Equals(existingPri.PriLimitMin, updatedPri.PriLimitMin))
-                existingPri.PriLimitMin = updatedPri.PriLimitMin;
-
-            if (!Equals(existingPri.PriLimitMax, updatedPri.PriLimitMax))
-                existingPri.PriLimitMax = updatedPri.PriLimitMax;
-
-            // Update nested collections in Pri
-            SynchronizeCollection(
-                existingPri.SuperPeriods,
-                updatedPri.SuperPeriods,
-                UpdateSuperPeriod
-            );
-        }
-
-        private void UpdateSuperPeriod(EmitterModePriSuperPeriodValue existingSuper, EmitterModePriSuperPeriodValue updatedSuper)
-        {
-            if (!Equals(existingSuper.SuperPeriodValueMin, updatedSuper.SuperPeriodValueMin))
-                existingSuper.SuperPeriodValueMin = updatedSuper.SuperPeriodValueMin;
-
-            if (!Equals(existingSuper.SuperPeriodValueMax, updatedSuper.SuperPeriodValueMax))
-                existingSuper.SuperPeriodValueMax = updatedSuper.SuperPeriodValueMax;
-        }
-
-        // Helper function to synchronize collections
-        private void SynchronizeCollection<T>(
-            List<T> existingCollection,
-            List<T> updatedCollection,
-            Action<T, T> updateItemAction) where T : class, new()
-        {
-            // Update or Add items
+            // Update existing items or add new ones
             for (int i = 0; i < updatedCollection.Count; i++)
             {
                 if (i < existingCollection.Count)
                 {
-                    updateItemAction(existingCollection[i], updatedCollection[i]);
+                    // Update existing items
+                    UpdateObject(existingCollection[i], updatedCollection[i]);
                 }
                 else
                 {
+                    // Add new items
                     existingCollection.Add(updatedCollection[i]);
                 }
             }
