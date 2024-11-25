@@ -128,5 +128,18 @@ namespace tree_form_API.Services
             if (result.DeletedCount == 0)
                 throw new InvalidOperationException($"Emitter with ID {id} not found.");
         }
+    
+        public async Task EmitterUpdatedByAsync(Guid id, string updatedBy)
+        {
+            var filter = Builders<Emitter>.Filter.Eq(e => e.Id, id);
+            var update = Builders<Emitter>.Update.Set(e => e.UpdatedBy, updatedBy);
+
+            var result = await _emitterCollection.UpdateOneAsync(filter, update);
+
+            if (result.MatchedCount == 0)
+            {
+                throw new InvalidOperationException($"Emitter with ID {id} not found.");
+            }
+        }
     }
 }

@@ -87,4 +87,27 @@ public class EmitterController : ControllerBase
             return NotFound(ex.Message);
         }
     }
+
+    [HttpPatch("emitter-updatedby")]
+    public async Task<IActionResult> UpdateUpdatedBy([FromBody] EmitterUpdatedByDTO dto)
+    {
+        if (dto == null)
+        {
+            return BadRequest("DTO cannot be null.");
+        }
+
+        try
+        {
+            await _emitterService.EmitterUpdatedByAsync(dto.Id, dto.UpdatedBy);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
 }

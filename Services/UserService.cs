@@ -150,5 +150,17 @@ namespace tree_form_API.Services
         {
             return await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
         }
+    
+        public async Task<bool> UserUpdatedBy(string userId, string? updatedBy)
+        {
+            var updateDefinition = Builders<User>.Update.Set(u => u.UpdatedBy, updatedBy);
+
+            var result = await _userCollection.UpdateOneAsync(
+                u => u.Id == userId,
+                updateDefinition
+            );
+
+            return result.ModifiedCount > 0; // Return true if the update was successful
+        }
     }
 }

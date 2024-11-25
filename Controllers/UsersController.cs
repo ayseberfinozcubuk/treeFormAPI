@@ -228,4 +228,29 @@ public class UsersController : ControllerBase
         }
         return Unauthorized();
     }
+
+    [HttpPatch("user-updatedby")]
+    public async Task<IActionResult> UserUpdatedBy([FromBody] UserUpdatedByDTO dto)
+    {
+        if (dto == null)
+        {
+            return BadRequest("DTO cannot be null.");
+        }
+
+        var user = await _userService.GetUserById(dto.Id);
+        if (user == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        try
+        {
+            await _userService.UserUpdatedBy(dto.Id, dto.UpdatedBy);
+            return NoContent(); // 204 No Content indicates success without a response body
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"An error occurred while updating UpdatedBy: {ex.Message}");
+        }
+    }
 }
