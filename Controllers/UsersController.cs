@@ -87,7 +87,7 @@ public class UsersController : ControllerBase
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true, // Prevent JavaScript access
-            Secure = true,   // Send over HTTPS only; set to false during development if not using HTTPS
+            Secure = false,   // Send over HTTPS only; set to false during development if not using HTTPS
             SameSite = SameSiteMode.Lax, // Adjust to None if cross-origin requests are needed
             Expires = DateTime.UtcNow.AddHours(72) // Set token expiration
         };

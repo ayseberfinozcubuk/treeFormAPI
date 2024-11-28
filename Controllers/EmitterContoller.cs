@@ -18,6 +18,7 @@ public class EmitterController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "ReadWritePolicy")]
     public async Task<IActionResult> Create([FromBody] Emitter emitter)
     {
         if (emitter == null)
@@ -25,14 +26,21 @@ public class EmitterController : ControllerBase
             return BadRequest("Emitter data cannot be null.");
         }
 
-        // Save to database directly with IDs provided by the frontend
+        var userId = HttpContext.Items["UserId"]?.ToString();
+        if (userId == null)
+        {
+            return Unauthorized("User not authenticated.");
+        }
+
+        emitter.UpdatedBy = userId;
         await _emitterService.CreateAsync(emitter);
 
-        return CreatedAtAction(nameof(GetById), new { id = emitter.Id }, emitter); // Use GetById to provide the location of the created resource
+        return CreatedAtAction(nameof(GetById), new { id = emitter.Id }, emitter);
     }
 
     //[AllowAnonymous]
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> GetAll()
     {
         var emitters = await _emitterService.GetAllAsync();
@@ -40,6 +48,7 @@ public class EmitterController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> GetById(Guid id)
     {
         var emitter = await _emitterService.GetByIdAsync(id);
@@ -53,6 +62,7 @@ public class EmitterController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = "ReadWritePolicy")]
     public async Task<IActionResult> Update(Guid id, [FromBody] Emitter updatedEmitter)
     {
         if (updatedEmitter == null)
@@ -60,21 +70,28 @@ public class EmitterController : ControllerBase
             return BadRequest("Emitter data cannot be null.");
         }
 
-        // Ensure the correct Id is assigned
+        var userId = HttpContext.Items["UserId"]?.ToString();
+        if (userId == null)
+        {
+            return Unauthorized("User not authenticated.");
+        }
+
         updatedEmitter.Id = id;
+        updatedEmitter.UpdatedBy = userId;
 
         try
         {
             await _emitterService.UpdateAsync(id, updatedEmitter);
-            return NoContent(); // Returns 204 No Content on successful update
+            return NoContent();
         }
         catch (InvalidOperationException ex)
         {
-            return NotFound(ex.Message); // Returns 404 if the Emitter is not found
+            return NotFound(ex.Message);
         }
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "AdminPolicy")]
     public async Task<IActionResult> Delete(Guid id)
     {
         try
@@ -89,6 +106,7 @@ public class EmitterController : ControllerBase
     }
 
     [HttpPatch("emitter-updatedby")]
+    [Authorize(Policy = "ReadWritePolicy")]
     public async Task<IActionResult> UpdateUpdatedBy([FromBody] EmitterUpdatedByDTO dto)
     {
         if (dto == null)
@@ -111,3 +129,7 @@ public class EmitterController : ControllerBase
         }
     }
 }
+
+/*
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjY3NDcwMWJlYTkyNzBiNDBlYjdlZmNlYSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImFhYUBhYWEuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3MzI5NjY3MzgsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTAwMCIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCJ9.mhKnY3hPAtvQ7P9tdhqg8Cm1moyySuNUR1T4rJkQbCw
+*/

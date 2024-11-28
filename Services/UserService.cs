@@ -76,24 +76,18 @@ namespace tree_form_API.Services
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            // Claims for the token
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role) // Include user role
+                new Claim(ClaimTypes.Role, user.Role)
             };
-
-            // Calculate expiration dynamically
-            var expiresInHours = Convert.ToDouble(jwtSettings["ExpiresInHours"]);
-            var tokenExpiration = DateTime.UtcNow.AddHours(expiresInHours);
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: tokenExpiration,
+                expires: DateTime.UtcNow.AddHours(Convert.ToDouble(jwtSettings["ExpiresInHours"])),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
