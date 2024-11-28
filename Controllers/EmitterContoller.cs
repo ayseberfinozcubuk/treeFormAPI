@@ -26,11 +26,15 @@ public class EmitterController : ControllerBase
             return BadRequest("Emitter data cannot be null.");
         }
 
+        // Debug or log the UserId value
         var userId = HttpContext.Items["UserId"]?.ToString();
         if (userId == null)
         {
+            Console.WriteLine("Debug: UserId is null in HttpContext.Items");
             return Unauthorized("User not authenticated.");
         }
+
+        Console.WriteLine($"Debug: UserId found in HttpContext.Items: {userId}");
 
         emitter.UpdatedBy = userId;
         await _emitterService.CreateAsync(emitter);

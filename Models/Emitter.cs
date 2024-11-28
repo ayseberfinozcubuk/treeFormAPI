@@ -15,7 +15,20 @@ namespace tree_form_API.Models
         public string? Function { get; set; } // Görev Kodu
         public int? NumberOfModes { get; set; } // Mod Sayısı
         public List<EmitterMode> Modes { get; set; } = new List<EmitterMode>(); // Emiter Mod Listesi
+        public List<EmitterAssociatedPlatform> AssociatedPlatforms { get; set; } = new List<EmitterAssociatedPlatform>();
         public string? UpdatedBy { get; set; }
+    }
+
+    public class EmitterAssociatedPlatform : IIdentifiable
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
+        public Guid Id { get; set; }
+        [BsonRepresentation(BsonType.String)]
+        public Guid EmitterId { get; set; }
+        [BsonRepresentation(BsonType.String)]
+        public Guid PlatformId { get; set; }
+        public string? AssociataionType { get; set; } // İlişki Tipi
     }
 
     public class EmitterMode : IIdentifiable

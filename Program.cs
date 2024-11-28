@@ -15,7 +15,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // Allow only your frontend origin
+        policy.WithOrigins("http://localhost:3000") 
               .AllowAnyMethod() // Allow GET, POST, etc.
               .AllowAnyHeader() // Allow custom headers
               .AllowCredentials(); // Allow cookies or authentication headers
@@ -188,7 +188,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-// app.UseMiddleware<TokenValidationMiddleware>();
+app.UseMiddleware<JwtMiddleware>();
 
 // Apply the CORS policy
 app.UseCors("CorsPolicy");
