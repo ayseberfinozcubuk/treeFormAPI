@@ -68,12 +68,28 @@ builder.Services.AddScoped(sp =>
     return database.GetCollection<Emitter>(emittersCollectionName);
 });
 
-// Register AutoMapper
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+// Register IMongoCollection<Platform> for injection into PlatformService
+builder.Services.AddScoped(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<EmitterDatabaseSettings>>().Value;
+    var client = sp.GetRequiredService<IMongoClient>();
+    var database = client.GetDatabase(settings.DatabaseName);
+
+    if (!settings.Collections.TryGetValue("Platforms", out var platformsCollectionName) || string.IsNullOrWhiteSpace(platformsCollectionName))
+    {
+        throw new InvalidOperationException("Platforms collection name is not specified in configuration.");
+    }
+
+    return database.GetCollection<Platform>(platformsCollectionName);
+});
 
 // Register services as scoped
 builder.Services.AddScoped<EmitterService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<PlatformService>();
+
+// Register AutoMapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // Configure JWT authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
