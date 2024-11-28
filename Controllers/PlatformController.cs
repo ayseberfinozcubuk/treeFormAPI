@@ -59,5 +59,29 @@ namespace tree_form_API.Controllers
             }
             return NoContent();
         }
+    
+        [HttpPatch("platform-updatedby")]
+        //[Authorize(Policy = "ReadWritePolicy")]
+        public async Task<IActionResult> UpdateUpdatedBy([FromBody] PlatformUpdatedByDTO dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest("DTO cannot be null.");
+            }
+
+            try
+            {
+                await _platformService.PlatformUpdatedByAsync(dto.Id, dto.UpdatedBy);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

@@ -33,5 +33,18 @@ namespace tree_form_API.Services
             var result = await _platformCollection.DeleteOneAsync(platform => platform.Id == id);
             return result.DeletedCount > 0;
         }
+
+        public async Task PlatformUpdatedByAsync(Guid id, string updatedBy)
+        {
+            var filter = Builders<Platform>.Filter.Eq(e => e.Id, id);
+            var update = Builders<Platform>.Update.Set(e => e.UpdatedBy, updatedBy);
+
+            var result = await _platformCollection.UpdateOneAsync(filter, update);
+
+            if (result.MatchedCount == 0)
+            {
+                throw new InvalidOperationException($"Platform with ID {id} not found.");
+            }
+        }
     }
 }
