@@ -218,7 +218,7 @@ public class UsersController : ControllerBase
         return Ok("Authenticated");
     }
 
-    [HttpGet("get-role")]
+    [HttpGet("{id}/get-role")]
     public IActionResult GetRole()
     {
         if (HttpContext.User.Identity.IsAuthenticated)
