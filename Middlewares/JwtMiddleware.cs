@@ -39,27 +39,14 @@ public class JwtMiddleware
                 var jwtToken = (JwtSecurityToken)validatedToken;
                 var userId = jwtToken.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
 
-                // Verify the user's existence in the database
-                var user = await userService.GetUserById(userId);
-                if (user == null)
-                {
-                    // If user doesn't exist, reject the token
-                    context.Response.StatusCode = 401; // Unauthorized
-                    return;
-                }
-
-                // Attach the user ID and role to the context
-                context.Items["UserId"] = user.Id;
-                context.Items["UserRole"] = user.Role;
+                // Attach the user ID to the context
+                context.Items["UserId"] = userId;
             }
             catch
             {
                 // Token validation failed
-                context.Response.StatusCode = 401; // Unauthorized
-                return;
             }
         }
-
         await _next(context);
     }
 }
