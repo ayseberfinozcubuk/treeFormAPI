@@ -10,10 +10,12 @@ using tree_form_API.Constants;
 public class UsersController : ControllerBase
 {
     private readonly UserService _userService;
+    private readonly ILogger<UsersController> _logger;
 
-    public UsersController(UserService userService)
+    public UsersController(UserService userService, ILogger<UsersController> logger)
     {
         _userService = userService;
+        _logger = logger;
     }
 
     // GET: api/users - Retrieve all users (Admin-only access)
@@ -21,7 +23,9 @@ public class UsersController : ControllerBase
     //[Authorize(Policy = "AdminPolicy")]
     public async Task<IActionResult> GetAllUsers()
     {
+        _logger.LogInformation("Request received to get all users.");
         var users = await _userService.GetAllUsers();
+        _logger.LogInformation($"Returning {users.Count} users.");
         return Ok(users);
     }
 
@@ -219,14 +223,28 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("{id}/get-role")]
-    public IActionResult GetRole()
+    public async Task<IActionResult> GetRole(string id)
     {
-        if (HttpContext.User.Identity.IsAuthenticated)
+        _logger.LogInformation("GetRole id: ", id);
+        // Ensure the current user is authenticated
+        if (!HttpContext.User.Identity.IsAuthenticated)
         {
-            var role = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
-            return Ok(new { role });
+            _logger.LogInformation("GetRole Unauthorized");
+            return Unauthorized();
         }
-        return Unauthorized();
+
+        // Retrieve the user from the database using the provided id
+        var user = await _userService.GetUserById(id);
+        _logger.LogInformation("GetRole user: ", user);
+
+        if (user == null)
+        {
+            _logger.LogInformation("GetRole User not found.");
+            return NotFound("User not found.");
+        }
+
+        // Return the role of the specified user
+        return Ok(new { role = user.Role });
     }
 
     [HttpPatch("user-updatedby")]

@@ -15,18 +15,22 @@ namespace tree_form_API.Services
         private readonly IMongoCollection<User> _userCollection;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<UserService> _logger;
 
-        public UserService(IMongoCollection<User> userCollection, IMapper mapper, IConfiguration configuration)
+        public UserService(IMongoCollection<User> userCollection, IMapper mapper, IConfiguration configuration, ILogger<UserService> logger)
         {
             _userCollection = userCollection;
             _mapper = mapper;
             _configuration = configuration;
+            _logger = logger;
         }
 
         // Get all users
         public async Task<List<UserResponseDTO>> GetAllUsers()
         {
+            _logger.LogInformation("Fetching all users from the database.");
             var users = await _userCollection.Find(_ => true).ToListAsync();
+            _logger.LogInformation($"Retrieved {users.Count} users from the database.");
             return _mapper.Map<List<UserResponseDTO>>(users);
         }
 

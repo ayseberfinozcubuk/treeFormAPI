@@ -1,0 +1,115 @@
+2024-12-03 14:00:02.507 +03:00 [INF] User profile is available. Using 'C:\Users\ayse.ozcubuk\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2024-12-03 14:00:02.734 +03:00 [INF] Now listening on: http://localhost:5000
+2024-12-03 14:00:02.860 +03:00 [INF] Application started. Press Ctrl+C to shut down.
+2024-12-03 14:00:02.865 +03:00 [INF] Hosting environment: Development
+2024-12-03 14:00:02.867 +03:00 [INF] Content root path: C:\Users\ayse.ozcubuk\Desktop\project_all\test-react\tree-form-API
+2024-12-03 14:00:14.929 +03:00 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5000/api/users/signin - null null
+2024-12-03 14:00:14.989 +03:00 [WRN] Failed to determine the https port for redirect.
+2024-12-03 14:00:15.298 +03:00 [INF] CORS policy execution successful.
+2024-12-03 14:00:15.306 +03:00 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5000/api/users/signin - 204 null null 379.1555ms
+2024-12-03 14:00:15.344 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5000/api/users/signin - application/json 40
+2024-12-03 14:00:15.361 +03:00 [INF] Attempting to validate token.
+2024-12-03 14:00:15.455 +03:00 [INF] Token validated successfully for UserId: 674701bea9270b40eb7efcea
+2024-12-03 14:00:15.459 +03:00 [INF] CORS policy execution successful.
+2024-12-03 14:00:15.512 +03:00 [INF] Executing endpoint 'UsersController.SignIn (tree-form-API)'
+2024-12-03 14:00:15.545 +03:00 [INF] Route matched with {action = "SignIn", controller = "Users"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] SignIn(UserLoginDTO) on controller UsersController (tree-form-API).
+2024-12-03 14:00:16.178 +03:00 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType1`1[[UserResponseDTO, tree-form-API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2024-12-03 14:00:16.197 +03:00 [INF] Executed action UsersController.SignIn (tree-form-API) in 643.928ms
+2024-12-03 14:00:16.203 +03:00 [INF] Executed endpoint 'UsersController.SignIn (tree-form-API)'
+2024-12-03 14:00:16.209 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5000/api/users/signin - 200 null application/json; charset=utf-8 865.1494ms
+2024-12-03 14:00:16.271 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/users/get-role - null null
+2024-12-03 14:00:16.283 +03:00 [INF] Attempting to validate token.
+2024-12-03 14:00:16.286 +03:00 [INF] Token validated successfully for UserId: 674701bea9270b40eb7efcea
+2024-12-03 14:00:16.295 +03:00 [INF] CORS policy execution successful.
+2024-12-03 14:00:16.302 +03:00 [INF] Executing endpoint 'UsersController.GetUserById (tree-form-API)'
+2024-12-03 14:00:16.316 +03:00 [INF] Route matched with {action = "GetUserById", controller = "Users"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUserById(System.String) on controller UsersController (tree-form-API).
+2024-12-03 14:00:16.332 +03:00 [INF] Executed action UsersController.GetUserById (tree-form-API) in 11.7736ms
+2024-12-03 14:00:16.335 +03:00 [INF] Executed endpoint 'UsersController.GetUserById (tree-form-API)'
+2024-12-03 14:00:16.340 +03:00 [ERR] An unhandled exception has occurred while executing the request.
+System.FormatException: 'get-role' is not a valid 24 digit hex string.
+   at MongoDB.Bson.ObjectId.Parse(String s)
+   at MongoDB.Bson.Serialization.Serializers.StringSerializer.SerializeValue(BsonSerializationContext context, BsonSerializationArgs args, String value)
+   at MongoDB.Bson.Serialization.Serializers.SealedClassSerializerBase`1.Serialize(BsonSerializationContext context, BsonSerializationArgs args, TValue value)
+   at MongoDB.Bson.Serialization.Serializers.SerializerBase`1.MongoDB.Bson.Serialization.IBsonSerializer.Serialize(BsonSerializationContext context, BsonSerializationArgs args, Object value)
+   at MongoDB.Bson.Serialization.IBsonSerializerExtensions.Serialize(IBsonSerializer serializer, BsonSerializationContext context, Object value)
+   at MongoDB.Driver.Linq.Linq3Implementation.Misc.SerializationHelper.SerializeValue(IBsonSerializer serializer, Object value)
+   at MongoDB.Driver.Linq.Linq3Implementation.Misc.SerializationHelper.SerializeValue(IBsonSerializer serializer, ConstantExpression constantExpression, Expression containingExpression)
+   at MongoDB.Driver.Linq.Linq3Implementation.Translators.ExpressionToFilterTranslators.ExpressionTranslators.ComparisonExpressionToFilterTranslator.Translate(TranslationContext context, BinaryExpression expression)
+   at MongoDB.Driver.Linq.Linq3Implementation.Translators.ExpressionToFilterTranslators.ExpressionToFilterTranslator.TranslateUsingQueryOperators(TranslationContext context, Expression expression)
+   at MongoDB.Driver.Linq.Linq3Implementation.Translators.ExpressionToFilterTranslators.ExpressionToFilterTranslator.Translate(TranslationContext context, Expression expression, Boolean exprOk)
+   at MongoDB.Driver.Linq.Linq3Implementation.Translators.ExpressionToFilterTranslators.ExpressionToFilterTranslator.TranslateLambda(TranslationContext context, LambdaExpression lambdaExpression, IBsonSerializer parameterSerializer, Boolean asRoot)
+   at MongoDB.Driver.Linq.Linq3Implementation.LinqProviderAdapterV3.TranslateExpressionToFilter[TDocument](Expression`1 expression, IBsonSerializer`1 documentSerializer, IBsonSerializerRegistry serializerRegistry)
+   at MongoDB.Driver.ExpressionFilterDefinition`1.Render(RenderArgs`1 args)
+   at MongoDB.Driver.MongoCollectionImpl`1.CreateFindOperation[TProjection](FilterDefinition`1 filter, FindOptions`2 options)
+   at MongoDB.Driver.MongoCollectionImpl`1.FindAsync[TProjection](IClientSessionHandle session, FilterDefinition`1 filter, FindOptions`2 options, CancellationToken cancellationToken)
+   at MongoDB.Driver.MongoCollectionImpl`1.<>c__DisplayClass55_0`1.<FindAsync>b__0(IClientSessionHandle session)
+   at MongoDB.Driver.MongoCollectionImpl`1.UsingImplicitSessionAsync[TResult](Func`2 funcAsync, CancellationToken cancellationToken)
+   at MongoDB.Driver.IAsyncCursorSourceExtensions.FirstOrDefaultAsync[TDocument](IAsyncCursorSource`1 source, CancellationToken cancellationToken)
+   at tree_form_API.Services.UserService.GetUserById(String id) in C:\Users\ayse.ozcubuk\Desktop\project_all\test-react\tree-form-API\Services\UserService.cs:line 149
+   at UsersController.GetUserById(String id) in C:\Users\ayse.ozcubuk\Desktop\project_all\test-react\tree-form-API\Controllers\UsersController.cs:line 35
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at JwtMiddleware.Invoke(HttpContext context, UserService userService, ILogger`1 logger) in C:\Users\ayse.ozcubuk\Desktop\project_all\test-react\tree-form-API\Middlewares\JwtMiddleware.cs:line 52
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+2024-12-03 14:00:16.397 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/users/get-role - 500 null text/plain; charset=utf-8 125.9818ms
+2024-12-03 14:00:16.479 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/api/users/get-role - null null
+2024-12-03 14:00:16.488 +03:00 [INF] Attempting to validate token.
+2024-12-03 14:00:16.493 +03:00 [INF] Token validated successfully for UserId: 674701bea9270b40eb7efcea
+2024-12-03 14:00:16.510 +03:00 [INF] CORS policy execution successful.
+2024-12-03 14:00:16.522 +03:00 [INF] Executing endpoint 'UsersController.GetUserById (tree-form-API)'
+2024-12-03 14:00:16.529 +03:00 [INF] Route matched with {action = "GetUserById", controller = "Users"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUserById(System.String) on controller UsersController (tree-form-API).
+2024-12-03 14:00:16.542 +03:00 [INF] Executed action UsersController.GetUserById (tree-form-API) in 6.7104ms
+2024-12-03 14:00:16.546 +03:00 [INF] Executed endpoint 'UsersController.GetUserById (tree-form-API)'
+2024-12-03 14:00:16.550 +03:00 [ERR] An unhandled exception has occurred while executing the request.
+System.FormatException: 'get-role' is not a valid 24 digit hex string.
+   at MongoDB.Bson.ObjectId.Parse(String s)
+   at MongoDB.Bson.Serialization.Serializers.StringSerializer.SerializeValue(BsonSerializationContext context, BsonSerializationArgs args, String value)
+   at MongoDB.Bson.Serialization.Serializers.SealedClassSerializerBase`1.Serialize(BsonSerializationContext context, BsonSerializationArgs args, TValue value)
+   at MongoDB.Bson.Serialization.Serializers.SerializerBase`1.MongoDB.Bson.Serialization.IBsonSerializer.Serialize(BsonSerializationContext context, BsonSerializationArgs args, Object value)
+   at MongoDB.Bson.Serialization.IBsonSerializerExtensions.Serialize(IBsonSerializer serializer, BsonSerializationContext context, Object value)
+   at MongoDB.Driver.Linq.Linq3Implementation.Misc.SerializationHelper.SerializeValue(IBsonSerializer serializer, Object value)
+   at MongoDB.Driver.Linq.Linq3Implementation.Misc.SerializationHelper.SerializeValue(IBsonSerializer serializer, ConstantExpression constantExpression, Expression containingExpression)
+   at MongoDB.Driver.Linq.Linq3Implementation.Translators.ExpressionToFilterTranslators.ExpressionTranslators.ComparisonExpressionToFilterTranslator.Translate(TranslationContext context, BinaryExpression expression)
+   at MongoDB.Driver.Linq.Linq3Implementation.Translators.ExpressionToFilterTranslators.ExpressionToFilterTranslator.TranslateUsingQueryOperators(TranslationContext context, Expression expression)
+   at MongoDB.Driver.Linq.Linq3Implementation.Translators.ExpressionToFilterTranslators.ExpressionToFilterTranslator.Translate(TranslationContext context, Expression expression, Boolean exprOk)
+   at MongoDB.Driver.Linq.Linq3Implementation.Translators.ExpressionToFilterTranslators.ExpressionToFilterTranslator.TranslateLambda(TranslationContext context, LambdaExpression lambdaExpression, IBsonSerializer parameterSerializer, Boolean asRoot)
+   at MongoDB.Driver.Linq.Linq3Implementation.LinqProviderAdapterV3.TranslateExpressionToFilter[TDocument](Expression`1 expression, IBsonSerializer`1 documentSerializer, IBsonSerializerRegistry serializerRegistry)
+   at MongoDB.Driver.ExpressionFilterDefinition`1.Render(RenderArgs`1 args)
+   at MongoDB.Driver.MongoCollectionImpl`1.CreateFindOperation[TProjection](FilterDefinition`1 filter, FindOptions`2 options)
+   at MongoDB.Driver.MongoCollectionImpl`1.FindAsync[TProjection](IClientSessionHandle session, FilterDefinition`1 filter, FindOptions`2 options, CancellationToken cancellationToken)
+   at MongoDB.Driver.MongoCollectionImpl`1.<>c__DisplayClass55_0`1.<FindAsync>b__0(IClientSessionHandle session)
+   at MongoDB.Driver.MongoCollectionImpl`1.UsingImplicitSessionAsync[TResult](Func`2 funcAsync, CancellationToken cancellationToken)
+   at MongoDB.Driver.IAsyncCursorSourceExtensions.FirstOrDefaultAsync[TDocument](IAsyncCursorSource`1 source, CancellationToken cancellationToken)
+   at tree_form_API.Services.UserService.GetUserById(String id) in C:\Users\ayse.ozcubuk\Desktop\project_all\test-react\tree-form-API\Services\UserService.cs:line 149
+   at UsersController.GetUserById(String id) in C:\Users\ayse.ozcubuk\Desktop\project_all\test-react\tree-form-API\Controllers\UsersController.cs:line 35
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at JwtMiddleware.Invoke(HttpContext context, UserService userService, ILogger`1 logger) in C:\Users\ayse.ozcubuk\Desktop\project_all\test-react\tree-form-API\Middlewares\JwtMiddleware.cs:line 52
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+2024-12-03 14:00:16.601 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/users/get-role - 500 null text/plain; charset=utf-8 122.5262ms

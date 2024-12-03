@@ -7,8 +7,22 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using tree_form_API.Constants;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration) // Read from appsettings.json
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: "Logs/log-.txt", // Log file path
+        rollingInterval: RollingInterval.Day, // Create a new log file daily
+        restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information) // Minimum log level
+    .CreateLogger();
+
+
+builder.Host.UseSerilog(); // Replace the default logging provider with Serilog
 
 // Add CORS policy to allow requests from localhost:3000
 builder.Services.AddCors(options =>

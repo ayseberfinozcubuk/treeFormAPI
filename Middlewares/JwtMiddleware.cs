@@ -15,7 +15,7 @@ public class JwtMiddleware
         _configuration = configuration;
     }
 
-    public async Task Invoke(HttpContext context, UserService userService)
+    public async Task Invoke(HttpContext context, UserService userService, ILogger<JwtMiddleware> logger)
     {
         var token = context.Request.Cookies["authToken"]; // Or retrieve from Authorization header
 
@@ -23,6 +23,7 @@ public class JwtMiddleware
         {
             try
             {
+                logger.LogInformation("Attempting to validate token.");
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
                 tokenHandler.ValidateToken(token, new TokenValidationParameters
@@ -41,10 +42,11 @@ public class JwtMiddleware
 
                 // Attach the user ID to the context
                 context.Items["UserId"] = userId;
+                logger.LogInformation($"Token validated successfully for UserId: {userId}");
             }
-            catch
+            catch (Exception ex)
             {
-                // Token validation failed
+                logger.LogError($"Token validation failed: {ex.Message}");
             }
         }
         await _next(context);
