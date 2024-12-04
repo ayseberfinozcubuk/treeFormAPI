@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
+using MongoDB.Bson;
 
 namespace tree_form_API.Services
 {
@@ -146,6 +147,13 @@ namespace tree_form_API.Services
 
         public async Task<User?> GetUserById(string id)
         {
+            // Validate if the id is a valid ObjectId
+            if (!ObjectId.TryParse(id, out _))
+            {
+                _logger.LogError($"Invalid ObjectId format: {id}");
+                return null; // Handle invalid id gracefully
+            }
+
             return await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
         }
     

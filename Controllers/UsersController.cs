@@ -4,6 +4,7 @@ using tree_form_API.Services;
 using tree_form_API.Models;
 using System.Security.Claims;
 using tree_form_API.Constants;
+using MongoDB.Bson;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -32,6 +33,7 @@ public class UsersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUserById(string id)
     {
+        _logger.LogInformation("Request received to get all user by id: ", id);
         var user = await _userService.GetUserById(id);
         if (user == null)
         {
@@ -52,9 +54,10 @@ public class UsersController : ControllerBase
     //[Authorize(Policy = "AdminPolicy")]
     public async Task<IActionResult> AddUser([FromBody] UserRegistrationDTO userDto)
     {
-        Console.WriteLine("userDto: ", userDto);
+        _logger.LogInformation("Request received to post user registiration dto: ", userDto);
+        //Console.WriteLine("userDto: ", userDto);
         var user = await _userService.AddUser(userDto);
-        Console.WriteLine("user: ", user);
+        //Console.WriteLine("user: ", user);
         if (user == null)
         {
             return BadRequest("User could not be created.");
@@ -68,6 +71,7 @@ public class UsersController : ControllerBase
     //[Authorize(Policy = "AdminPolicy")]
     public async Task<IActionResult> DeleteUser(string id)
     {
+        _logger.LogInformation("Request received to delete a user by id: ", id);
         var success = await _userService.DeleteUser(id);
         if (!success)
         {
@@ -80,6 +84,7 @@ public class UsersController : ControllerBase
     [HttpPost("signin")]
     public async Task<IActionResult> SignIn([FromBody] UserLoginDTO loginDto)
     {
+        _logger.LogInformation("Request received to post sign-in with user login dto: ", loginDto);
         var token = await _userService.AuthenticateUser(loginDto);
 
         if (token == null)
@@ -113,6 +118,7 @@ public class UsersController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUserProfile(string id, [FromBody] UserUpdateDTO updateDto)
     {
+        _logger.LogInformation("Request received to put an update ", updateDto , " on user by id: ", id);
         var updatedUser = await _userService.UpdateUser(id, updateDto);
 
         if (updatedUser == null)
@@ -126,6 +132,7 @@ public class UsersController : ControllerBase
     [HttpPut("{id}/change-password")]
     public async Task<IActionResult> ChangePassword(string id, [FromBody] ChangePasswordDTO changePasswordDto)
     {
+        _logger.LogInformation("Request received to put change password ", changePasswordDto , " on user by id: ", id);
         var user = await _userService.GetUserById(id); // Retrieve the user
         if (user == null)
         {
@@ -164,6 +171,7 @@ public class UsersController : ControllerBase
     //[Authorize(Policy = "AdminPolicy")] // Ensure only admins can update roles
     public async Task<IActionResult> UpdateUserRole(string id, [FromBody] UserRoleUpdateDTO roleUpdateDto)
     {
+        _logger.LogInformation("Request received to put update user role ", roleUpdateDto , " on user by id: ", id);
         // Get the current user
         var user = await _userService.GetUserById(id);
         if (user == null)
@@ -192,6 +200,7 @@ public class UsersController : ControllerBase
     //[AllowAnonymous]
     public IActionResult GetUserRoles()
     {
+        _logger.LogInformation("Request received to get user roles");
         var roles = new[] { UserRoles.Admin, UserRoles.Read, UserRoles.ReadWrite };
         return Ok(roles);
     }
@@ -199,6 +208,7 @@ public class UsersController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
+        _logger.LogInformation("Request received to post logout ");
         // Clear the authToken cookie
         Response.Cookies.Delete("authToken");
         return Ok("Logged out successfully");
@@ -207,6 +217,7 @@ public class UsersController : ControllerBase
     [HttpGet("check-auth")]
     public IActionResult CheckAuth()
     {
+        _logger.LogInformation("Request received to get check auth ");
         var authCookie = Request.Cookies["authToken"];
         if (string.IsNullOrEmpty(authCookie))
         {
@@ -225,31 +236,35 @@ public class UsersController : ControllerBase
     [HttpGet("{id}/get-role")]
     public async Task<IActionResult> GetRole(string id)
     {
-        _logger.LogInformation("GetRole id: ", id);
-        // Ensure the current user is authenticated
-        if (!HttpContext.User.Identity.IsAuthenticated)
+        _logger.LogInformation("Request received to get role on user by id: ", id);
+        // Validate ObjectId format
+        if (!ObjectId.TryParse(id, out _))
         {
-            _logger.LogInformation("GetRole Unauthorized");
-            return Unauthorized();
+            _logger.LogError($"Invalid ObjectId format (in getRole): {id}");
+            return BadRequest("Invalid ID format.");
         }
 
-        // Retrieve the user from the database using the provided id
-        var user = await _userService.GetUserById(id);
-        _logger.LogInformation("GetRole user: ", user);
+        if (!HttpContext.User.Identity.IsAuthenticated)
+        {
+            _logger.LogWarning("Unauthorized access attempt to GetRole.");
+            return Unauthorized("User is not authenticated.");
+        }
 
+        // Retrieve user by id
+        var user = await _userService.GetUserById(id);
         if (user == null)
         {
-            _logger.LogInformation("GetRole User not found.");
+            _logger.LogInformation("User not found.");
             return NotFound("User not found.");
         }
 
-        // Return the role of the specified user
         return Ok(new { role = user.Role });
     }
 
     [HttpPatch("user-updatedby")]
     public async Task<IActionResult> UserUpdatedBy([FromBody] UserUpdatedByDTO dto)
     {
+        _logger.LogInformation("Request received to patch user updated by ", dto);
         if (dto == null)
         {
             return BadRequest("DTO cannot be null.");

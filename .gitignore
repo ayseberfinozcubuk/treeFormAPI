@@ -36,4 +36,9 @@ appsettings.*.json
 # Ignore publish output
 publish/
 
+# Ignore log files
+Logs/
+*.txt
+
+# Keep specific development file
 need-for-development.txt
