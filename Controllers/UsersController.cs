@@ -102,6 +102,10 @@ public class UsersController : ControllerBase
         };
 
         Response.Cookies.Append("authToken", token, cookieOptions);
+        Response.Headers.Add("Access-Control-Allow-Origin", "http://localhost:3000");
+        Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+
+        _logger.LogInformation($"Token set: {token}");
 
         var user = await _userService.GetUserByEmail(loginDto.Email);
         var userResponse = new UserResponseDTO
@@ -208,29 +212,10 @@ public class UsersController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        _logger.LogInformation("Request received to post logout ");
-        // Clear the authToken cookie
+        _logger.LogInformation("Request received to log out");
+
         Response.Cookies.Delete("authToken");
         return Ok("Logged out successfully");
-    }
-
-    [HttpGet("check-auth")]
-    public IActionResult CheckAuth()
-    {
-        _logger.LogInformation("Request received to get check auth ");
-        var authCookie = Request.Cookies["authToken"];
-        if (string.IsNullOrEmpty(authCookie))
-        {
-            return Unauthorized("Authentication token is missing.");
-        }
-
-        //var isValid = ValidateJwtToken(authCookie); // Implement your token validation logic
-        //if (!isValid)
-        //{
-        //    return Unauthorized("Invalid or expired token.");
-        //}
-
-        return Ok("Authenticated");
     }
 
     [HttpGet("{id}/get-role")]
@@ -285,5 +270,17 @@ public class UsersController : ControllerBase
         {
             return StatusCode(500, $"An error occurred while updating UpdatedBy: {ex.Message}");
         }
+    }
+
+    [HttpOptions]
+    [Route("{*path}")]
+    public IActionResult Options()
+    {
+        Response.Headers.Add("Access-Control-Allow-Origin", "http://localhost:3000");
+        Response.Headers.Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT");
+        Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+
+        return Ok();
     }
 }
