@@ -2,7 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using tree_form_API.Services;
 
 public class JwtMiddleware
 {
@@ -15,27 +14,23 @@ public class JwtMiddleware
         _configuration = configuration;
     }
 
-    public async Task Invoke(HttpContext context, UserService userService, ILogger<JwtMiddleware> logger)
+    public async Task Invoke(HttpContext context, ILogger<JwtMiddleware> logger)
     {
         var path = context.Request.Path.Value?.ToLower();
 
-        // Skip validation for preflight OPTIONS requests
-        if (context.Request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+        // Skip validation for OPTIONS and public endpoints
+        var publicPaths = new[] { "/api/users/signin", "/api/public" };
+        if (context.Request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase) ||
+            (path != null && publicPaths.Any(p => path.StartsWith(p))))
         {
             await _next(context);
             return;
         }
 
-        // Skip validation for public endpoints like /signin
-        if (path != null && path.StartsWith("/api/users/signin"))
-        {
-            await _next(context);
-            return;
-        }
-
+        // Retrieve token from cookies or Authorization header
         string token = context.Request.Cookies.ContainsKey("authToken")
             ? context.Request.Cookies["authToken"]
-            : context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            : context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "").Trim();
 
         if (string.IsNullOrEmpty(token))
         {
@@ -49,9 +44,11 @@ public class JwtMiddleware
         {
             var userId = ValidateToken(token, logger);
             context.Items["UserId"] = userId;
+            logger.LogInformation($"Token validated successfully. UserId: {userId}");
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogError($"Token validation failed: {ex.Message}");
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsync("Unauthorized: Invalid token.");
             return;
@@ -76,7 +73,6 @@ public class JwtMiddleware
             ClockSkew = TimeSpan.Zero
         };
 
-        // Validate the token
         var principal = tokenHandler.ValidateToken(token, parameters, out var validatedToken);
 
         if (validatedToken is not JwtSecurityToken jwtToken ||
@@ -85,7 +81,6 @@ public class JwtMiddleware
             throw new SecurityTokenException("Invalid token.");
         }
 
-        // Retrieve the UserId from claims
         return principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
     }
 }

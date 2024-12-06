@@ -11,10 +11,12 @@ using tree_form_API.Services;
 public class EmitterController : ControllerBase
 {
     private readonly EmitterService _emitterService;
+    private readonly ILogger<UsersController> _logger;
 
-    public EmitterController(EmitterService emitterService)
+    public EmitterController(EmitterService emitterService, ILogger<UsersController> logger)
     {
         _emitterService = emitterService;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -36,7 +38,15 @@ public class EmitterController : ControllerBase
 
         Console.WriteLine($"Debug: UserId found in HttpContext.Items: {userId}");
 
-        emitter.UpdatedBy = userId;
+        if (Guid.TryParse(userId, out var userGuid))
+        {
+            emitter.UpdatedBy = userGuid;
+        }
+        else
+        {
+            return BadRequest("Invalid UserId format.");
+        }
+        
         await _emitterService.CreateAsync(emitter);
 
         return CreatedAtAction(nameof(GetById), new { id = emitter.Id }, emitter);
@@ -81,7 +91,14 @@ public class EmitterController : ControllerBase
         }
 
         updatedEmitter.Id = id;
-        updatedEmitter.UpdatedBy = userId;
+        if (Guid.TryParse(userId, out var userGuid))
+        {
+            updatedEmitter.UpdatedBy = userGuid;
+        }
+        else
+        {
+            return BadRequest("Invalid UserId format.");
+        }
 
         try
         {
@@ -109,27 +126,4 @@ public class EmitterController : ControllerBase
         }
     }
 
-    [HttpPatch("emitter-updatedby")]
-    [Authorize(Policy = "ReadWritePolicy")]
-    public async Task<IActionResult> UpdateUpdatedBy([FromBody] EmitterUpdatedByDTO dto)
-    {
-        if (dto == null)
-        {
-            return BadRequest("DTO cannot be null.");
-        }
-
-        try
-        {
-            await _emitterService.EmitterUpdatedByAsync(dto.Id, dto.UpdatedBy);
-            return NoContent();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
-    }
 }

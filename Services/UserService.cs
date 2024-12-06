@@ -46,7 +46,7 @@ namespace tree_form_API.Services
         }
         
         // Delete user by ID
-        public async Task<bool> DeleteUser(string id)
+        public async Task<bool> DeleteUser(Guid id)
         {
             var result = await _userCollection.DeleteOneAsync(u => u.Id == id);
             return result.DeletedCount > 0; // Returns true if deletion was successful
@@ -103,7 +103,7 @@ namespace tree_form_API.Services
             return await _userCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
         }
     
-        public async Task<UserResponseDTO?> UpdateUser(string id, UserUpdateDTO updateDto)
+        public async Task<UserResponseDTO?> UpdateUser(Guid id, UserUpdateDTO updateDto)
         {
             var updateDefinition = Builders<User>.Update
                 .Set(u => u.UserName, updateDto.UserName)
@@ -123,7 +123,7 @@ namespace tree_form_API.Services
             return updatedUser != null ? _mapper.Map<UserResponseDTO>(updatedUser) : null;
         }
     
-        public async Task<bool> UpdatePassword(string userId, string newPassword)
+        public async Task<bool> UpdatePassword(Guid userId, string newPassword)
         {
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
             var updateDefinition = Builders<User>.Update.Set(u => u.PasswordHash, passwordHash);
@@ -135,7 +135,7 @@ namespace tree_form_API.Services
             return result.ModifiedCount > 0; // Returns true if update was successful
         }
     
-        public async Task<bool> UpdateUserRole(string userId, string newRole)
+        public async Task<bool> UpdateUserRole(Guid userId, string newRole)
         {
             var updateDefinition = Builders<User>.Update.Set(u => u.Role, newRole);
             var result = await _userCollection.UpdateOneAsync(
@@ -145,21 +145,22 @@ namespace tree_form_API.Services
             return result.ModifiedCount > 0; // Returns true if update was successful
         }
 
-        public async Task<User?> GetUserById(string id)
+        public async Task<User?> GetUserById(Guid id)
         {
-            // Validate if the id is a valid ObjectId
-            if (!ObjectId.TryParse(id, out _))
+            string idString = id.ToString();
+
+            if (!ObjectId.TryParse(idString, out _))
             {
-                _logger.LogError($"Invalid ObjectId format: {id}");
+                _logger.LogError($"Invalid ObjectId format: {idString}");
                 return null; // Handle invalid id gracefully
             }
 
             return await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
         }
     
-        public async Task<bool> UserUpdatedBy(string userId, string? updatedBy)
+        public async Task<bool> UserUpdatedBy(Guid userId, Guid roleUpdatedBy)
         {
-            var updateDefinition = Builders<User>.Update.Set(u => u.UpdatedBy, updatedBy);
+            var updateDefinition = Builders<User>.Update.Set(u => u.RoleUpdatedBy, roleUpdatedBy);
 
             var result = await _userCollection.UpdateOneAsync(
                 u => u.Id == userId,

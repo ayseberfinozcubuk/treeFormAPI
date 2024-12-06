@@ -8,8 +8,8 @@ namespace tree_form_API.Models
     public class User
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        [BsonRepresentation(BsonType.String)]
+        public Guid Id { get; set; }
 
         [BsonElement("UserName")]
         public string UserName { get; set; }
@@ -22,7 +22,9 @@ namespace tree_form_API.Models
 
         [BsonElement("Role")]
         public string Role { get; set; } = "read"; // Default role is 'read'
-
-        public string? UpdatedBy { get; set; }
+        public Guid? CreatedBy { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public Guid? RoleUpdatedBy { get; set; }
+        public DateTime? RoleUpdatedDate { get; set; }
     }
 }

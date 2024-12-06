@@ -21,7 +21,6 @@ Log.Logger = new LoggerConfiguration()
         restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information) // Minimum log level
     .CreateLogger();
 
-
 builder.Host.UseSerilog(); // Replace the default logging provider with Serilog
 
 // Add CORS policy to allow requests from localhost:3000

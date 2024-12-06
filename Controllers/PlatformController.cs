@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using tree_form_API.Models;
 using tree_form_API.Services;
@@ -48,6 +49,40 @@ namespace tree_form_API.Controllers
             return CreatedAtAction(nameof(GetPlatformById), new { id = platform.Id }, platform);
         }
 
+        [HttpPut("{id:guid}")]
+        //[Authorize(Policy = "ReadWritePolicy")]
+        public async Task<IActionResult> UpdatePlatform(Guid id, [FromBody] Platform updatedPlatform)
+        {
+            if (updatedPlatform == null)
+            {
+                return BadRequest("Platform data cannot be null.");
+            }
+
+            var userId = HttpContext.Items["UserId"]?.ToString();
+            if (userId == null)
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return BadRequest("Invalid UserId format.");
+            }
+
+            updatedPlatform.Id = id;
+            updatedPlatform.UpdatedBy = userGuid;
+
+            try
+            {
+                await _platformService.UpdateAsync(id, updatedPlatform);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
         // DELETE: api/Platform/{id}
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeletePlatform(Guid id)
@@ -60,28 +95,5 @@ namespace tree_form_API.Controllers
             return NoContent();
         }
     
-        [HttpPatch("platform-updatedby")]
-        //[Authorize(Policy = "ReadWritePolicy")]
-        public async Task<IActionResult> UpdateUpdatedBy([FromBody] PlatformUpdatedByDTO dto)
-        {
-            if (dto == null)
-            {
-                return BadRequest("DTO cannot be null.");
-            }
-
-            try
-            {
-                await _platformService.PlatformUpdatedByAsync(dto.Id, dto.UpdatedBy);
-                return NoContent();
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
     }
 }

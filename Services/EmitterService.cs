@@ -13,12 +13,14 @@ namespace tree_form_API.Services
     public class EmitterService
     {
         private readonly IMongoCollection<Emitter> _emitterCollection;
+        private readonly ILogger<UserService> _logger;
 
-        public EmitterService(IOptions<EmitterDatabaseSettings> emitterDatabaseSettings)
+        public EmitterService(IOptions<EmitterDatabaseSettings> emitterDatabaseSettings, ILogger<UserService> logger)
         {
             var mongoClient = new MongoClient(emitterDatabaseSettings.Value.ConnectionString);
             var mongoDatabase = mongoClient.GetDatabase(emitterDatabaseSettings.Value.DatabaseName);
             _emitterCollection = mongoDatabase.GetCollection<Emitter>(emitterDatabaseSettings.Value.Collections["Emitters"]);
+            _logger = logger;
         }
 
         public async Task CreateAsync(Emitter newEmitter)
@@ -129,8 +131,10 @@ namespace tree_form_API.Services
                 throw new InvalidOperationException($"Emitter with ID {id} not found.");
         }
     
-        public async Task EmitterUpdatedByAsync(Guid id, string updatedBy)
+        public async Task EmitterUpdatedByAsync(Guid id, Guid updatedBy)
         {
+            _logger.LogInformation($"Debug: Service received Id={id}, UpdatedBy={updatedBy}");
+            
             var filter = Builders<Emitter>.Filter.Eq(e => e.Id, id);
             var update = Builders<Emitter>.Update.Set(e => e.UpdatedBy, updatedBy);
 

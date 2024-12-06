@@ -16,7 +16,10 @@ namespace tree_form_API.Models
         public int? NumberOfModes { get; set; } // Mod Sayısı
         public List<EmitterMode> Modes { get; set; } = new List<EmitterMode>(); // Emiter Mod Listesi
         public List<EmitterAssociatedPlatform> AssociatedPlatforms { get; set; } = new List<EmitterAssociatedPlatform>();
-        public string? UpdatedBy { get; set; }
+        public Guid? CreatedBy { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public Guid? UpdatedBy { get; set; }
+        public DateTime? UpdatedDate { get; set; }
     }
 
     public class EmitterAssociatedPlatform : IIdentifiable

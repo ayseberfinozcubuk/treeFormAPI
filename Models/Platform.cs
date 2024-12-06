@@ -15,6 +15,9 @@ namespace tree_form_API.Models
         public string PlatformType { get; set; } = string.Empty; // Platform Tipi
         public string? PennantOrTailOrPlateNumber { get; set; } // Bayrak/ Kuyruk/ Plaka Numarası
         public string PlatformCategory { get; set; } = string.Empty; // Platform Kategorisi
-        public string? UpdatedBy { get; set; }
+        public Guid? CreatedBy { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public Guid? UpdatedBy { get; set; }
+        public DateTime? UpdatedDate { get; set; }
     }
 }

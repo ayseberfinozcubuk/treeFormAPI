@@ -30,8 +30,8 @@ public class UsersController : ControllerBase
         return Ok(users);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetUserById(string id)
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetUserById(Guid id)
     {
         _logger.LogInformation("Request received to get all user by id: ", id);
         var user = await _userService.GetUserById(id);
@@ -67,9 +67,9 @@ public class UsersController : ControllerBase
     }
 
     // DELETE: api/users/{id} - Delete a user by ID (Admin-only access)
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     //[Authorize(Policy = "AdminPolicy")]
-    public async Task<IActionResult> DeleteUser(string id)
+    public async Task<IActionResult> DeleteUser(Guid id)
     {
         _logger.LogInformation("Request received to delete a user by id: ", id);
         var success = await _userService.DeleteUser(id);
@@ -119,8 +119,8 @@ public class UsersController : ControllerBase
         return Ok(new { User = userResponse });
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUserProfile(string id, [FromBody] UserUpdateDTO updateDto)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateUserProfile(Guid id, [FromBody] UserUpdateDTO updateDto)
     {
         _logger.LogInformation("Request received to put an update ", updateDto , " on user by id: ", id);
         var updatedUser = await _userService.UpdateUser(id, updateDto);
@@ -133,8 +133,8 @@ public class UsersController : ControllerBase
         return Ok(updatedUser);
     }
 
-    [HttpPut("{id}/change-password")]
-    public async Task<IActionResult> ChangePassword(string id, [FromBody] ChangePasswordDTO changePasswordDto)
+    [HttpPut("{id:guid}/change-password")]
+    public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordDTO changePasswordDto)
     {
         _logger.LogInformation("Request received to put change password ", changePasswordDto , " on user by id: ", id);
         var user = await _userService.GetUserById(id); // Retrieve the user
@@ -171,9 +171,9 @@ public class UsersController : ControllerBase
         return Ok("Password updated successfully.");
     }
     
-    [HttpPut("{id}/role")]
+    [HttpPut("{id:guid}/role")]
     //[Authorize(Policy = "AdminPolicy")] // Ensure only admins can update roles
-    public async Task<IActionResult> UpdateUserRole(string id, [FromBody] UserRoleUpdateDTO roleUpdateDto)
+    public async Task<IActionResult> UpdateUserRole(Guid id, [FromBody] UserRoleUpdateDTO roleUpdateDto)
     {
         _logger.LogInformation("Request received to put update user role ", roleUpdateDto , " on user by id: ", id);
         // Get the current user
@@ -218,16 +218,10 @@ public class UsersController : ControllerBase
         return Ok("Logged out successfully");
     }
 
-    [HttpGet("{id}/get-role")]
-    public async Task<IActionResult> GetRole(string id)
+    [HttpGet("{id:guid}/get-role")]
+    public async Task<IActionResult> GetRole(Guid id)
     {
-        _logger.LogInformation("Request received to get role on user by id: ", id);
-        // Validate ObjectId format
-        if (!ObjectId.TryParse(id, out _))
-        {
-            _logger.LogError($"Invalid ObjectId format (in getRole): {id}");
-            return BadRequest("Invalid ID format.");
-        }
+        _logger.LogInformation("Request received to get role on user by id: {Id}", id);
 
         if (!HttpContext.User.Identity.IsAuthenticated)
         {
@@ -244,32 +238,6 @@ public class UsersController : ControllerBase
         }
 
         return Ok(new { role = user.Role });
-    }
-
-    [HttpPatch("user-updatedby")]
-    public async Task<IActionResult> UserUpdatedBy([FromBody] UserUpdatedByDTO dto)
-    {
-        _logger.LogInformation("Request received to patch user updated by ", dto);
-        if (dto == null)
-        {
-            return BadRequest("DTO cannot be null.");
-        }
-
-        var user = await _userService.GetUserById(dto.Id);
-        if (user == null)
-        {
-            return NotFound("User not found.");
-        }
-
-        try
-        {
-            await _userService.UserUpdatedBy(dto.Id, dto.UpdatedBy);
-            return NoContent(); // 204 No Content indicates success without a response body
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"An error occurred while updating UpdatedBy: {ex.Message}");
-        }
     }
 
     [HttpOptions]
