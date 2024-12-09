@@ -10,10 +10,12 @@ namespace tree_form_API.Controllers
     public class PlatformController : ControllerBase
     {
         private readonly PlatformService _platformService;
+        private readonly ILogger<UsersController> _logger;
 
-        public PlatformController(PlatformService platformService)
+        public PlatformController(PlatformService platformService, ILogger<UsersController> logger)
         {
             _platformService = platformService;
+            _logger = logger;
         }
 
         // GET: api/Platform
@@ -64,13 +66,7 @@ namespace tree_form_API.Controllers
                 return Unauthorized("User not authenticated.");
             }
 
-            if (!Guid.TryParse(userId, out var userGuid))
-            {
-                return BadRequest("Invalid UserId format.");
-            }
-
             updatedPlatform.Id = id;
-            updatedPlatform.UpdatedBy = userGuid;
 
             try
             {

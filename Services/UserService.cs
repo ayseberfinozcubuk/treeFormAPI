@@ -40,6 +40,7 @@ namespace tree_form_API.Services
         {
             var user = _mapper.Map<User>(userDto);
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+            user.CreatedDate = DateTime.UtcNow;
 
             await _userCollection.InsertOneAsync(user);
             return _mapper.Map<UserResponseDTO>(user);
@@ -137,7 +138,9 @@ namespace tree_form_API.Services
     
         public async Task<bool> UpdateUserRole(Guid userId, string newRole)
         {
-            var updateDefinition = Builders<User>.Update.Set(u => u.Role, newRole);
+            var updateDefinition = Builders<User>.Update
+                .Set(u => u.Role, newRole)
+                .Set(u => u.UpdatedDate, DateTime.UtcNow); // Update the UpdatedDate to the current time
             var result = await _userCollection.UpdateOneAsync(
                 u => u.Id == userId,
                 updateDefinition);
@@ -147,27 +150,7 @@ namespace tree_form_API.Services
 
         public async Task<User?> GetUserById(Guid id)
         {
-            string idString = id.ToString();
-
-            if (!ObjectId.TryParse(idString, out _))
-            {
-                _logger.LogError($"Invalid ObjectId format: {idString}");
-                return null; // Handle invalid id gracefully
-            }
-
             return await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
-        }
-    
-        public async Task<bool> UserUpdatedBy(Guid userId, Guid roleUpdatedBy)
-        {
-            var updateDefinition = Builders<User>.Update.Set(u => u.RoleUpdatedBy, roleUpdatedBy);
-
-            var result = await _userCollection.UpdateOneAsync(
-                u => u.Id == userId,
-                updateDefinition
-            );
-
-            return result.ModifiedCount > 0; // Return true if the update was successful
         }
     }
 }

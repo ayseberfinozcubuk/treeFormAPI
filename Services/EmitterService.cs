@@ -25,8 +25,13 @@ namespace tree_form_API.Services
 
         public async Task CreateAsync(Emitter newEmitter)
         {
+            //_logger.LogInformation("Emitter at creation Service: ", newEmitter);
             if (newEmitter == null)
                 throw new ArgumentNullException(nameof(newEmitter), "Emitter cannot be null.");
+
+            // Assign CreatedDate and UpdatedDate
+            newEmitter.CreatedDate = DateTime.UtcNow;
+
             await _emitterCollection.InsertOneAsync(newEmitter);
         }
 
@@ -46,6 +51,9 @@ namespace tree_form_API.Services
             var existingEmitter = await GetByIdAsync(id);
             if (existingEmitter == null)
                 throw new InvalidOperationException($"Emitter with ID {id} not found.");
+
+            // Assign UpdatedDate
+            updatedEmitter.UpdatedDate = DateTime.UtcNow;
 
             // Dynamically update the object
             UpdateObject(existingEmitter, updatedEmitter);
@@ -129,21 +137,6 @@ namespace tree_form_API.Services
             var result = await _emitterCollection.DeleteOneAsync(filter);
             if (result.DeletedCount == 0)
                 throw new InvalidOperationException($"Emitter with ID {id} not found.");
-        }
-    
-        public async Task EmitterUpdatedByAsync(Guid id, Guid updatedBy)
-        {
-            _logger.LogInformation($"Debug: Service received Id={id}, UpdatedBy={updatedBy}");
-            
-            var filter = Builders<Emitter>.Filter.Eq(e => e.Id, id);
-            var update = Builders<Emitter>.Update.Set(e => e.UpdatedBy, updatedBy);
-
-            var result = await _emitterCollection.UpdateOneAsync(filter, update);
-
-            if (result.MatchedCount == 0)
-            {
-                throw new InvalidOperationException($"Emitter with ID {id} not found.");
-            }
         }
     }
 }

@@ -38,15 +38,6 @@ public class EmitterController : ControllerBase
 
         Console.WriteLine($"Debug: UserId found in HttpContext.Items: {userId}");
 
-        if (Guid.TryParse(userId, out var userGuid))
-        {
-            emitter.UpdatedBy = userGuid;
-        }
-        else
-        {
-            return BadRequest("Invalid UserId format.");
-        }
-        
         await _emitterService.CreateAsync(emitter);
 
         return CreatedAtAction(nameof(GetById), new { id = emitter.Id }, emitter);
@@ -91,14 +82,6 @@ public class EmitterController : ControllerBase
         }
 
         updatedEmitter.Id = id;
-        if (Guid.TryParse(userId, out var userGuid))
-        {
-            updatedEmitter.UpdatedBy = userGuid;
-        }
-        else
-        {
-            return BadRequest("Invalid UserId format.");
-        }
 
         try
         {

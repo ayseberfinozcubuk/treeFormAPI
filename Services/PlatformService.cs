@@ -7,10 +7,12 @@ namespace tree_form_API.Services
     public class PlatformService
     {
         private readonly IMongoCollection<Platform> _platformCollection;
+        private readonly ILogger<UserService> _logger;
 
-        public PlatformService(IMongoCollection<Platform> platformCollection)
+        public PlatformService(IMongoCollection<Platform> platformCollection, ILogger<UserService> logger)
         {
             _platformCollection = platformCollection;
+            _logger = logger;
         }
 
         public async Task<List<Platform>> GetAllPlatformsAsync()
@@ -26,6 +28,7 @@ namespace tree_form_API.Services
         public async Task AddPlatformAsync(Platform platform)
         {
             platform.Id = Guid.NewGuid();
+            platform.CreatedDate = DateTime.UtcNow;
             await _platformCollection.InsertOneAsync(platform);
         }
 
@@ -43,6 +46,9 @@ namespace tree_form_API.Services
             var existingPlatform = await GetByIdAsync(id);
             if (existingPlatform == null)
                 throw new InvalidOperationException($"Platform with ID {id} not found.");
+
+            // Assign UpdatedDate to the current time
+            updatedPlatform.UpdatedDate = DateTime.UtcNow;
 
             // Dynamically update the object
             UpdateObject(existingPlatform, updatedPlatform);
@@ -124,19 +130,6 @@ namespace tree_form_API.Services
         {
             var result = await _platformCollection.DeleteOneAsync(platform => platform.Id == id);
             return result.DeletedCount > 0;
-        }
-
-        public async Task PlatformUpdatedByAsync(Guid id, Guid updatedBy)
-        {
-            var filter = Builders<Platform>.Filter.Eq(e => e.Id, id);
-            var update = Builders<Platform>.Update.Set(e => e.UpdatedBy, updatedBy);
-
-            var result = await _platformCollection.UpdateOneAsync(filter, update);
-
-            if (result.MatchedCount == 0)
-            {
-                throw new InvalidOperationException($"Platform with ID {id} not found.");
-            }
         }
     }
 }

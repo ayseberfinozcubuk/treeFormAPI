@@ -4,6 +4,6 @@ namespace tree_form_API.Models
     public class UserRoleUpdateDTO
     {
         public string Role { get; set; }
-        public Guid RoleUpdatedBy { get; set; }
+        public Guid UpdatedBy { get; set; }
     }
 }

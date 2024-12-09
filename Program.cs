@@ -8,6 +8,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using tree_form_API.Constants;
 using Serilog;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Serializers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,8 @@ Log.Logger = new LoggerConfiguration()
         rollingInterval: RollingInterval.Day, // Create a new log file daily
         restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information) // Minimum log level
     .CreateLogger();
+    
+BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
 
 builder.Host.UseSerilog(); // Replace the default logging provider with Serilog
 

@@ -24,7 +24,7 @@ namespace tree_form_API.Models
         public string Role { get; set; } = "read"; // Default role is 'read'
         public Guid? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
-        public Guid? RoleUpdatedBy { get; set; }
-        public DateTime? RoleUpdatedDate { get; set; }
+        public Guid? UpdatedBy { get; set; } // Only role update
+        public DateTime? UpdatedDate { get; set; } // Only role update
     }
 }
