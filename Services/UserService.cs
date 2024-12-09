@@ -136,16 +136,45 @@ namespace tree_form_API.Services
             return result.ModifiedCount > 0; // Returns true if update was successful
         }
     
-        public async Task<bool> UpdateUserRole(Guid userId, string newRole)
+        public async Task<bool> UpdateUserRole(Guid id, UserRoleUpdateDTO roleUpdateDto)
         {
-            var updateDefinition = Builders<User>.Update
-                .Set(u => u.Role, newRole)
-                .Set(u => u.UpdatedDate, DateTime.UtcNow); // Update the UpdatedDate to the current time
-            var result = await _userCollection.UpdateOneAsync(
-                u => u.Id == userId,
-                updateDefinition);
+            if (roleUpdateDto == null)
+            {
+                throw new ArgumentNullException(nameof(roleUpdateDto), "Role update DTO cannot be null.");
+            }
 
-            return result.ModifiedCount > 0; // Returns true if update was successful
+            _logger.LogInformation("Updating role for user ID: {UserId} to role: {Role}", roleUpdateDto.UpdatedBy, roleUpdateDto.Role);
+
+            var filter = Builders<User>.Filter.Eq(u => u.Id, id);
+            var updateDefinition = Builders<User>.Update
+                .Set(u => u.Role, roleUpdateDto.Role)
+                .Set(u => u.UpdatedBy, roleUpdateDto.UpdatedBy)
+                .Set(u => u.UpdatedDate, DateTime.UtcNow);
+
+            try
+            {
+                var result = await _userCollection.UpdateOneAsync(filter, updateDefinition);
+
+                if (result.MatchedCount == 0)
+                {
+                    _logger.LogWarning("No user found with ID: {UserId}", roleUpdateDto.UpdatedBy);
+                    return false; // No matching user to update
+                }
+
+                if (result.ModifiedCount > 0)
+                {
+                    _logger.LogInformation("User role updated successfully for user ID: {UserId}", roleUpdateDto.UpdatedBy);
+                    return true;
+                }
+
+                _logger.LogWarning("Update operation completed, but no changes were made for user ID: {UserId}", roleUpdateDto.UpdatedBy);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating the role for user ID: {UserId}", roleUpdateDto.UpdatedBy);
+                throw; // Rethrow the exception for higher-level handling
+            }
         }
 
         public async Task<User?> GetUserById(Guid id)

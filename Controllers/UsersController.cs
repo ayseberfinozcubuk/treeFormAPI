@@ -175,8 +175,9 @@ public class UsersController : ControllerBase
     //[Authorize(Policy = "AdminPolicy")] // Ensure only admins can update roles
     public async Task<IActionResult> UpdateUserRole(Guid id, [FromBody] UserRoleUpdateDTO roleUpdateDto)
     {
-        _logger.LogInformation("Request received to put update user role ", roleUpdateDto , " on user by id: ", id);
-        // Get the current user
+        _logger.LogInformation("Request received to update user role with DTO: {RoleUpdateDto} for user ID: {Id}", roleUpdateDto, id);
+
+        // Check if the user exists
         var user = await _userService.GetUserById(id);
         if (user == null)
         {
@@ -190,7 +191,7 @@ public class UsersController : ControllerBase
         }
 
         // Proceed to update the role
-        var success = await _userService.UpdateUserRole(id, roleUpdateDto.Role);
+        var success = await _userService.UpdateUserRole(id, roleUpdateDto);
 
         if (!success)
         {
