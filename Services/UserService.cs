@@ -179,7 +179,15 @@ namespace tree_form_API.Services
 
         public async Task<User?> GetUserById(Guid id)
         {
-            return await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
+            try
+            {
+                return await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching user ID {UserId}.", id);
+                throw;
+            }
         }
     }
 }

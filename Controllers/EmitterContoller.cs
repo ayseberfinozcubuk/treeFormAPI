@@ -54,13 +54,18 @@ public class EmitterController : ControllerBase
 
     [HttpGet("{id:guid}")]
     [Authorize]
-    public async Task<IActionResult> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id, [FromQuery] bool updatedDateOnly = false)
     {
         var emitter = await _emitterService.GetByIdAsync(id);
 
         if (emitter == null)
         {
             return NotFound($"Emitter with ID {id} not found.");
+        }
+        
+        if (updatedDateOnly)
+        {
+            return Ok(new { UpdatedDate = emitter.UpdatedDate });
         }
 
         return Ok(emitter);

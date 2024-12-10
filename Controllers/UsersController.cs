@@ -31,13 +31,18 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetUserById(Guid id)
+    public async Task<IActionResult> GetUserById(Guid id, [FromQuery] bool updatedDateOnly = false)
     {
         _logger.LogInformation("Request received to get all user by id: ", id);
         var user = await _userService.GetUserById(id);
         if (user == null)
         {
             return NotFound("User not found.");
+        }
+
+        if (updatedDateOnly)
+        {
+            return Ok(new { UpdatedDate = user.UpdatedDate });
         }
 
         return Ok(new UserResponseDTO
