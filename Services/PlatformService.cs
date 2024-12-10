@@ -131,5 +131,17 @@ namespace tree_form_API.Services
             var result = await _platformCollection.DeleteOneAsync(platform => platform.Id == id);
             return result.DeletedCount > 0;
         }
+    
+        public async Task<long> GetCountAsync()
+        {
+            return await _platformCollection.CountDocumentsAsync(_ => true);
+        }
+    
+        public async Task<long> GetRecentCountAsync(TimeSpan timeSpan)
+        {
+            var recentDate = DateTime.UtcNow.Subtract(timeSpan);
+            var filter = Builders<Platform>.Filter.Gte(e => e.CreatedDate, recentDate);
+            return await _platformCollection.CountDocumentsAsync(filter);
+        }
     }
 }

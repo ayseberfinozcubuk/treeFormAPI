@@ -114,4 +114,11 @@ public class EmitterController : ControllerBase
         }
     }
 
+    [HttpGet("counts")]
+    public async Task<IActionResult> GetEmitterCounts()
+    {
+        var totalEmitters = await _emitterService.GetCountAsync();
+        var recentEmitters = await _emitterService.GetRecentCountAsync(TimeSpan.FromDays(30)); // Last 30 days
+        return Ok(new { totalEmitters, recentEmitters });
+    }
 }

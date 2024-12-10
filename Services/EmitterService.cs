@@ -138,5 +138,17 @@ namespace tree_form_API.Services
             if (result.DeletedCount == 0)
                 throw new InvalidOperationException($"Emitter with ID {id} not found.");
         }
+    
+        public async Task<long> GetCountAsync()
+        {
+            return await _emitterCollection.CountDocumentsAsync(_ => true);
+        }
+    
+        public async Task<long> GetRecentCountAsync(TimeSpan timeSpan)
+        {
+            var recentDate = DateTime.UtcNow.Subtract(timeSpan);
+            var filter = Builders<Emitter>.Filter.Gte(e => e.CreatedDate, recentDate);
+            return await _emitterCollection.CountDocumentsAsync(filter);
+        }
     }
 }

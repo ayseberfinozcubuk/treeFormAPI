@@ -3,93 +3,93 @@ using Microsoft.AspNetCore.Mvc;
 using tree_form_API.Models;
 using tree_form_API.Services;
 
-namespace tree_form_API.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class PlatformController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class PlatformController : ControllerBase
+    private readonly PlatformService _platformService;
+    private readonly ILogger<UsersController> _logger;
+
+    public PlatformController(PlatformService platformService, ILogger<UsersController> logger)
     {
-        private readonly PlatformService _platformService;
-        private readonly ILogger<UsersController> _logger;
+        _platformService = platformService;
+        _logger = logger;
+    }
 
-        public PlatformController(PlatformService platformService, ILogger<UsersController> logger)
+    // GET: api/Platform
+    [HttpGet]
+    public async Task<IActionResult> GetAllPlatforms()
+    {
+        var platforms = await _platformService.GetAllPlatformsAsync();
+        return Ok(platforms);
+    }
+
+    // GET: api/Platform/{id}
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetPlatformById(Guid id)
+    {
+        var platform = await _platformService.GetPlatformByIdAsync(id);
+        if (platform == null)
         {
-            _platformService = platformService;
-            _logger = logger;
+            return NotFound();
         }
+        return Ok(platform);
+    }
 
-        // GET: api/Platform
-        [HttpGet]
-        public async Task<IActionResult> GetAllPlatforms()
+    // POST: api/Platform
+    [HttpPost]
+    public async Task<IActionResult> AddPlatform([FromBody] Platform platform)
+    {
+        if (!ModelState.IsValid)
         {
-            var platforms = await _platformService.GetAllPlatformsAsync();
-            return Ok(platforms);
+            return BadRequest(ModelState);
         }
+        await _platformService.AddPlatformAsync(platform);
+        return CreatedAtAction(nameof(GetPlatformById), new { id = platform.Id }, platform);
+    }
 
-        // GET: api/Platform/{id}
-        [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetPlatformById(Guid id)
+    [HttpPut("{id:guid}")]
+    //[Authorize(Policy = "ReadWritePolicy")]
+    public async Task<IActionResult> UpdatePlatform(Guid id, [FromBody] Platform updatedPlatform)
+    {
+        if (updatedPlatform == null)
         {
-            var platform = await _platformService.GetPlatformByIdAsync(id);
-            if (platform == null)
-            {
-                return NotFound();
-            }
-            return Ok(platform);
+            return BadRequest("Platform data cannot be null.");
         }
-
-        // POST: api/Platform
-        [HttpPost]
-        public async Task<IActionResult> AddPlatform([FromBody] Platform platform)
+        var userId = HttpContext.Items["UserId"]?.ToString();
+        if (userId == null)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            await _platformService.AddPlatformAsync(platform);
-            return CreatedAtAction(nameof(GetPlatformById), new { id = platform.Id }, platform);
+            return Unauthorized("User not authenticated.");
         }
-
-        [HttpPut("{id:guid}")]
-        //[Authorize(Policy = "ReadWritePolicy")]
-        public async Task<IActionResult> UpdatePlatform(Guid id, [FromBody] Platform updatedPlatform)
+        updatedPlatform.Id = id;
+        try
         {
-            if (updatedPlatform == null)
-            {
-                return BadRequest("Platform data cannot be null.");
-            }
-
-            var userId = HttpContext.Items["UserId"]?.ToString();
-            if (userId == null)
-            {
-                return Unauthorized("User not authenticated.");
-            }
-
-            updatedPlatform.Id = id;
-
-            try
-            {
-                await _platformService.UpdateAsync(id, updatedPlatform);
-                return NoContent();
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(ex.Message);
-            }
-        }
-
-        // DELETE: api/Platform/{id}
-        [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> DeletePlatform(Guid id)
-        {
-            var success = await _platformService.DeletePlatformAsync(id);
-            if (!success)
-            {
-                return NotFound();
-            }
+            await _platformService.UpdateAsync(id, updatedPlatform);
             return NoContent();
         }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
+    }
+
+    // DELETE: api/Platform/{id}
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeletePlatform(Guid id)
+    {
+        var success = await _platformService.DeletePlatformAsync(id);
+        if (!success)
+        {
+            return NotFound();
+        }
+        return NoContent();
+    }
     
+    [HttpGet("counts")]
+    public async Task<IActionResult> GetPlatformCounts()
+    {
+        var totalPlatforms = await _platformService.GetCountAsync();
+        var recentPlatforms = await _platformService.GetRecentCountAsync(TimeSpan.FromDays(30)); // Last 30 days
+        return Ok(new { totalPlatforms, recentPlatforms });
     }
 }

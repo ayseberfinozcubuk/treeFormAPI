@@ -257,4 +257,12 @@ public class UsersController : ControllerBase
 
         return Ok();
     }
+
+    [HttpGet("counts")]
+    public async Task<IActionResult> GetUserCounts()
+    {
+        var totalUsers = await _userService.GetCountAsync();
+        var recentUsers = await _userService.GetRecentCountAsync(TimeSpan.FromDays(30)); // Last 30 days
+        return Ok(new { totalUsers, recentUsers });
+    }
 }

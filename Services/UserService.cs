@@ -189,5 +189,17 @@ namespace tree_form_API.Services
                 throw;
             }
         }
+    
+        public async Task<long> GetCountAsync()
+        {
+            return await _userCollection.CountDocumentsAsync(_ => true);
+        }
+    
+        public async Task<long> GetRecentCountAsync(TimeSpan timeSpan)
+        {
+            var recentDate = DateTime.UtcNow.Subtract(timeSpan);
+            var filter = Builders<User>.Filter.Gte(e => e.CreatedDate, recentDate);
+            return await _userCollection.CountDocumentsAsync(filter);
+        }
     }
 }
