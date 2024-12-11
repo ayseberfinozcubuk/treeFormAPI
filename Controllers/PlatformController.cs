@@ -88,8 +88,8 @@ public class PlatformController : ControllerBase
     [HttpGet("counts")]
     public async Task<IActionResult> GetPlatformCounts()
     {
-        var totalPlatforms = await _platformService.GetCountAsync();
-        var recentPlatforms = await _platformService.GetRecentCountAsync(TimeSpan.FromDays(30)); // Last 30 days
-        return Ok(new { totalPlatforms, recentPlatforms });
+        var total = await _platformService.GetCountAsync();
+        var recent = await _platformService.GetRecentCountAsync(TimeSpan.FromDays(30)); // Last 30 days
+        return Ok(new { total, recent });
     }
 }

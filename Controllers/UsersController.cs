@@ -261,8 +261,31 @@ public class UsersController : ControllerBase
     [HttpGet("counts")]
     public async Task<IActionResult> GetUserCounts()
     {
-        var totalUsers = await _userService.GetCountAsync();
-        var recentUsers = await _userService.GetRecentCountAsync(TimeSpan.FromDays(30)); // Last 30 days
-        return Ok(new { totalUsers, recentUsers });
+        var total = await _userService.GetCountAsync();
+        var recent = await _userService.GetRecentCountAsync(TimeSpan.FromDays(30)); // Last 30 days
+        return Ok(new { total, recent });
+    }
+
+    [HttpGet("role-counts")]
+    public async Task<IActionResult> GetRoleCounts()
+    {
+        _logger.LogInformation("Request received to get counts of roles in the database.");
+
+        // Get raw role counts
+        var rawRoleCounts = await _userService.GetRoleCounts();
+
+        // Dynamically get role values from UserRoles class
+        var roleValues = typeof(tree_form_API.Constants.UserRoles)
+            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+            .Where(field => field.IsLiteral || field.IsInitOnly) // Ensure static readonly or constants
+            .ToDictionary(field => field.Name, field => (string)field.GetValue(null));
+
+        // Map raw role keys to dynamically fetched values
+        var roleCountsWithValues = rawRoleCounts.ToDictionary(
+            role => roleValues.ContainsKey(role.Key) ? roleValues[role.Key] : role.Key, // Use value if available
+            role => role.Value
+        );
+
+        return Ok(roleCountsWithValues);
     }
 }

@@ -201,5 +201,17 @@ namespace tree_form_API.Services
             var filter = Builders<User>.Filter.Gte(e => e.CreatedDate, recentDate);
             return await _userCollection.CountDocumentsAsync(filter);
         }
+    
+        public async Task<Dictionary<string, long>> GetRoleCounts()
+        {
+            var roleCounts = await _userCollection.Aggregate()
+                .Group(
+                    u => u.Role,
+                    g => new { Role = g.Key, Count = g.Count() }
+                )
+                .ToListAsync();
+
+            return roleCounts.ToDictionary(rc => rc.Role, rc => (long)rc.Count);
+        }
     }
 }
