@@ -7,11 +7,13 @@ namespace tree_form_API.Services
     public class PlatformService
     {
         private readonly IMongoCollection<Platform> _platformCollection;
+        private readonly IMongoCollection<Emitter> _emitterCollection;
         private readonly ILogger<UserService> _logger;
 
-        public PlatformService(IMongoCollection<Platform> platformCollection, ILogger<UserService> logger)
+        public PlatformService(IMongoCollection<Platform> platformCollection, IMongoCollection<Emitter> emitterCollection, ILogger<UserService> logger)
         {
             _platformCollection = platformCollection;
+            _emitterCollection = emitterCollection;
             _logger = logger;
         }
 
@@ -126,10 +128,35 @@ namespace tree_form_API.Services
             }
         }
 
-        public async Task<bool> DeletePlatformAsync(Guid id)
+        /// <summary>
+        /// Delete a platform if it has no associated emitters.
+        /// </summary>
+        public async Task<(bool IsDeleted, string Message)> DeletePlatformAsync(Guid platformId)
         {
-            var result = await _platformCollection.DeleteOneAsync(platform => platform.Id == id);
-            return result.DeletedCount > 0;
+            // Check if the platform is associated with any emitters
+            var filter = Builders<Emitter>.Filter.ElemMatch(
+                e => e.AssociatedPlatforms,
+                p => p.PlatformId == platformId
+            );
+
+            var isAssociated = await _emitterCollection.CountDocumentsAsync(filter) > 0;
+
+            if (isAssociated)
+            {
+                return (false, "Cannot delete platform as it is associated with one or more emitters.");
+            }
+
+            // Proceed with deletion
+            var result = await _platformCollection.DeleteOneAsync(p => p.Id == platformId);
+
+            if (result.DeletedCount > 0)
+            {
+                return (true, "Platform deleted successfully.");
+            }
+            else
+            {
+                return (false, $"Platform with ID {platformId} not found.");
+            }
         }
     
         public async Task<long> GetCountAsync()
@@ -143,5 +170,6 @@ namespace tree_form_API.Services
             var filter = Builders<Platform>.Filter.Gte(e => e.CreatedDate, recentDate);
             return await _platformCollection.CountDocumentsAsync(filter);
         }
+    
     }
 }

@@ -73,16 +73,20 @@ public class PlatformController : ControllerBase
         }
     }
 
-    // DELETE: api/Platform/{id}
+    /// <summary>
+    /// Delete a platform if it has no associated emitters.
+    /// </summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeletePlatform(Guid id)
     {
-        var success = await _platformService.DeletePlatformAsync(id);
-        if (!success)
+        var (isDeleted, message) = await _platformService.DeletePlatformAsync(id);
+        
+        if (isDeleted)
         {
-            return NotFound();
+            return NoContent(); // 204 No Content
         }
-        return NoContent();
+        
+        return BadRequest(message); // 400 Bad Request with a meaningful message
     }
     
     [HttpGet("counts")]
@@ -92,4 +96,5 @@ public class PlatformController : ControllerBase
         var recent = await _platformService.GetRecentCountAsync(TimeSpan.FromDays(30)); // Last 30 days
         return Ok(new { total, recent });
     }
+
 }
