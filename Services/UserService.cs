@@ -6,8 +6,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
-using Microsoft.Extensions.Configuration;
-using MongoDB.Bson;
 
 namespace tree_form_API.Services
 {
@@ -26,53 +24,55 @@ namespace tree_form_API.Services
             _logger = logger;
         }
 
-        // Get all users
         public async Task<List<UserResponseDTO>> GetAllUsers()
         {
-            _logger.LogInformation("Fetching all users from the database.");
+            _logger.LogInformation("Fetching all users.");
             var users = await _userCollection.Find(_ => true).ToListAsync();
-            _logger.LogInformation($"Retrieved {users.Count} users from the database.");
             return _mapper.Map<List<UserResponseDTO>>(users);
         }
 
-        // Add user with specified role
         public async Task<UserResponseDTO?> AddUser(UserRegistrationDTO userDto)
         {
+            _logger.LogInformation("Adding a new user with email {Email}.", userDto.Email);
+
             var user = _mapper.Map<User>(userDto);
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
             user.CreatedDate = DateTime.UtcNow;
 
             await _userCollection.InsertOneAsync(user);
+            _logger.LogInformation("User with email {Email} added successfully.", userDto.Email);
+
             return _mapper.Map<UserResponseDTO>(user);
         }
         
-        // Delete user by ID
         public async Task<bool> DeleteUser(Guid id)
         {
+            _logger.LogInformation("Attempting to delete user with ID {UserId}.", id);
             var result = await _userCollection.DeleteOneAsync(u => u.Id == id);
-            return result.DeletedCount > 0; // Returns true if deletion was successful
+
+            if (result.DeletedCount > 0)
+            {
+                _logger.LogInformation("User with ID {UserId} deleted successfully.", id);
+                return true;
+            }
+
+            _logger.LogWarning("User with ID {UserId} not found for deletion.", id);
+            return false;
         }
 
         public async Task<string?> AuthenticateUser(UserLoginDTO loginDto)
         {
-            // Retrieve the user by email
+            _logger.LogInformation("Authentication attempt for email {Email}.", loginDto.Email);
+
             var user = await _userCollection.Find(u => u.Email == loginDto.Email).FirstOrDefaultAsync();
 
-            // Check if user exists
-            if (user == null)
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
             {
-                Console.WriteLine($"Authentication failed: No user found with email {loginDto.Email}");
+                _logger.LogWarning("Authentication failed for email {Email}.", loginDto.Email);
                 return null;
             }
 
-            // Verify password
-            if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
-            {
-                Console.WriteLine($"Authentication failed: Incorrect password for user {loginDto.Email}");
-                return null;
-            }
-
-            // Generate a JWT token for the authenticated user
+            _logger.LogInformation("Authentication successful for email {Email}.", loginDto.Email);
             return GenerateJwtToken(user);
         }
 
@@ -106,44 +106,52 @@ namespace tree_form_API.Services
     
         public async Task<UserResponseDTO?> UpdateUser(Guid id, UserUpdateDTO updateDto)
         {
+            _logger.LogInformation("Updating user with ID {UserId}.", id);
+
             var updateDefinition = Builders<User>.Update
                 .Set(u => u.UserName, updateDto.UserName)
                 .Set(u => u.Email, updateDto.Email);
 
-            var result = await _userCollection.UpdateOneAsync(
-                u => u.Id == id,
-                updateDefinition);
+            var result = await _userCollection.UpdateOneAsync(u => u.Id == id, updateDefinition);
 
             if (result.MatchedCount == 0)
             {
-                return null; // No user found with given ID
+                _logger.LogWarning("User with ID {UserId} not found for update.", id);
+                return null;
             }
 
-            // Fetch updated user
+            _logger.LogInformation("User with ID {UserId} updated successfully.", id);
             var updatedUser = await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
             return updatedUser != null ? _mapper.Map<UserResponseDTO>(updatedUser) : null;
         }
     
         public async Task<bool> UpdatePassword(Guid userId, string newPassword)
         {
+            _logger.LogInformation("Updating password for user with ID {UserId}.", userId);
+
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
             var updateDefinition = Builders<User>.Update.Set(u => u.PasswordHash, passwordHash);
 
-            var result = await _userCollection.UpdateOneAsync(
-                u => u.Id == userId,
-                updateDefinition);
+            var result = await _userCollection.UpdateOneAsync(u => u.Id == userId, updateDefinition);
 
-            return result.ModifiedCount > 0; // Returns true if update was successful
+            if (result.ModifiedCount > 0)
+            {
+                _logger.LogInformation("Password updated successfully for user with ID {UserId}.", userId);
+                return true;
+            }
+
+            _logger.LogWarning("Failed to update password for user with ID {UserId}.", userId);
+            return false;
         }
     
         public async Task<bool> UpdateUserRole(Guid id, UserRoleUpdateDTO roleUpdateDto)
         {
+            _logger.LogInformation("Updating role for user with ID {UserId}.", id);
             if (roleUpdateDto == null)
             {
                 throw new ArgumentNullException(nameof(roleUpdateDto), "Role update DTO cannot be null.");
             }
 
-            _logger.LogInformation("Updating role for user ID: {UserId} to role: {Role}", roleUpdateDto.UpdatedBy, roleUpdateDto.Role);
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, id);
             var updateDefinition = Builders<User>.Update
@@ -157,23 +165,22 @@ namespace tree_form_API.Services
 
                 if (result.MatchedCount == 0)
                 {
-                    _logger.LogWarning("No user found with ID: {UserId}", roleUpdateDto.UpdatedBy);
+                    _logger.LogWarning("User with ID {UserId} not found for role update.", id);
                     return false; // No matching user to update
                 }
 
                 if (result.ModifiedCount > 0)
                 {
-                    _logger.LogInformation("User role updated successfully for user ID: {UserId}", roleUpdateDto.UpdatedBy);
                     return true;
                 }
 
-                _logger.LogWarning("Update operation completed, but no changes were made for user ID: {UserId}", roleUpdateDto.UpdatedBy);
+                _logger.LogInformation("Role for user with ID {UserId} updated successfully.", id);
                 return false;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while updating the role for user ID: {UserId}", roleUpdateDto.UpdatedBy);
-                throw; // Rethrow the exception for higher-level handling
+                throw; 
             }
         }
 
@@ -185,25 +192,28 @@ namespace tree_form_API.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while fetching user ID {UserId}.", id);
+                _logger.LogError(ex, "An error occurred while fetching user with ID {UserId}.", id);
                 throw;
             }
         }
     
         public async Task<long> GetCountAsync()
         {
+            _logger.LogInformation("Counting total users.");
             return await _userCollection.CountDocumentsAsync(_ => true);
         }
     
         public async Task<long> GetRecentCountAsync(TimeSpan timeSpan)
         {
             var recentDate = DateTime.UtcNow.Subtract(timeSpan);
+            _logger.LogInformation("Counting users created since {RecentDate}.", recentDate);
             var filter = Builders<User>.Filter.Gte(e => e.CreatedDate, recentDate);
             return await _userCollection.CountDocumentsAsync(filter);
         }
     
         public async Task<Dictionary<string, long>> GetRoleCounts()
         {
+            _logger.LogInformation("Fetching role counts.");
             var roleCounts = await _userCollection.Aggregate()
                 .Group(
                     u => u.Role,

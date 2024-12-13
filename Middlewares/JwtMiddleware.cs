@@ -34,7 +34,7 @@ public class JwtMiddleware
 
         if (string.IsNullOrEmpty(token))
         {
-            logger.LogWarning("Token is missing.");
+            logger.LogWarning("JwtMiddleware: Token is missing in the request.");
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsync("Unauthorized: No token provided.");
             return;
@@ -44,11 +44,11 @@ public class JwtMiddleware
         {
             var userId = ValidateToken(token, logger);
             context.Items["UserId"] = userId;
-            logger.LogInformation($"Token validated successfully. UserId: {userId}");
+            logger.LogInformation("JwtMiddleware: Token validated successfully for UserId {UserId}.", userId);
         }
         catch (Exception ex)
         {
-            logger.LogError($"Token validation failed: {ex.Message}");
+            logger.LogWarning("JwtMiddleware: Token validation failed. Reason: {Reason}.", ex.Message);
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsync("Unauthorized: Invalid token.");
             return;
@@ -78,7 +78,7 @@ public class JwtMiddleware
         if (validatedToken is not JwtSecurityToken jwtToken ||
             !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
         {
-            throw new SecurityTokenException("Invalid token.");
+            throw new SecurityTokenException("Invalid token algorithm.");
         }
 
         return principal.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;

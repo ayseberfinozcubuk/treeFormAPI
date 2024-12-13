@@ -2,9 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using tree_form_API.Services;
 using tree_form_API.Models;
-using System.Security.Claims;
 using tree_form_API.Constants;
-using MongoDB.Bson;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -24,21 +22,25 @@ public class UsersController : ControllerBase
     //[Authorize(Policy = "AdminPolicy")]
     public async Task<IActionResult> GetAllUsers()
     {
-        _logger.LogInformation("Request received to get all users.");
+        _logger.LogInformation("Fetching all users.");
         var users = await _userService.GetAllUsers();
-        _logger.LogInformation($"Returning {users.Count} users.");
+        _logger.LogInformation("Successfully fetched {Count} users.", users.Count);
         return Ok(users);
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetUserById(Guid id, [FromQuery] bool updatedDateOnly = false)
     {
-        _logger.LogInformation("Request received to get all user by id: ", id);
+        _logger.LogInformation("Fetching user with ID {UserId}.", id);
         var user = await _userService.GetUserById(id);
+
         if (user == null)
         {
+            _logger.LogWarning("User with ID {UserId} not found.", id);
             return NotFound("User not found.");
         }
+
+        _logger.LogInformation("Successfully fetched user with ID {UserId}.", id);
 
         if (updatedDateOnly)
         {
@@ -59,15 +61,16 @@ public class UsersController : ControllerBase
     //[Authorize(Policy = "AdminPolicy")]
     public async Task<IActionResult> AddUser([FromBody] UserRegistrationDTO userDto)
     {
-        _logger.LogInformation("Request received to post user registiration dto: ", userDto);
-        //Console.WriteLine("userDto: ", userDto);
+        _logger.LogInformation("Attempting to add a new user.");
+
         var user = await _userService.AddUser(userDto);
-        //Console.WriteLine("user: ", user);
         if (user == null)
         {
+            _logger.LogError("Failed to create user.");
             return BadRequest("User could not be created.");
         }
 
+        _logger.LogInformation("User created successfully with ID {UserId}.", user.Id);
         return Ok(user);
     }
 
@@ -76,41 +79,44 @@ public class UsersController : ControllerBase
     //[Authorize(Policy = "AdminPolicy")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
-        _logger.LogInformation("Request received to delete a user by id: ", id);
+        _logger.LogInformation("Attempting to delete user with ID {UserId}.", id);
         var success = await _userService.DeleteUser(id);
+
         if (!success)
         {
+            _logger.LogWarning("Failed to delete user. User with ID {UserId} not found.", id);
             return NotFound("User not found.");
         }
 
+        _logger.LogInformation("User with ID {UserId} deleted successfully.", id);
         return NoContent(); // 204 No Content
     }
 
     [HttpPost("signin")]
     public async Task<IActionResult> SignIn([FromBody] UserLoginDTO loginDto)
     {
-        _logger.LogInformation("Request received to post sign-in with user login dto: ", loginDto);
+        _logger.LogInformation("User sign-in attempt with email {Email}.", loginDto.Email);
         var token = await _userService.AuthenticateUser(loginDto);
 
         if (token == null)
         {
+            _logger.LogWarning("Invalid credentials for email {Email}.", loginDto.Email);
             return Unauthorized("Invalid credentials.");
         }
 
-        // Set the token as a secure HTTP-only cookie
+        _logger.LogInformation("User authenticated successfully for email {Email}.", loginDto.Email);
+
         var cookieOptions = new CookieOptions
         {
-            HttpOnly = true, // Prevent JavaScript access
-            Secure = false,   // Send over HTTPS only; set to false during development if not using HTTPS
-            SameSite = SameSiteMode.Lax, // Adjust to None if cross-origin requests are needed
-            Expires = DateTime.UtcNow.AddHours(72) // Set token expiration
+            HttpOnly = true,
+            Secure = false,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTime.UtcNow.AddHours(72)
         };
 
         Response.Cookies.Append("authToken", token, cookieOptions);
         Response.Headers.Add("Access-Control-Allow-Origin", "http://localhost:3000");
         Response.Headers.Add("Access-Control-Allow-Credentials", "true");
-
-        _logger.LogInformation($"Token set: {token}");
 
         var user = await _userService.GetUserByEmail(loginDto.Email);
         var userResponse = new UserResponseDTO
@@ -127,7 +133,6 @@ public class UsersController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateUserProfile(Guid id, [FromBody] UserUpdateDTO updateDto)
     {
-        _logger.LogInformation("Request received to put an update ", updateDto , " on user by id: ", id);
         var updatedUser = await _userService.UpdateUser(id, updateDto);
 
         if (updatedUser == null)
@@ -141,38 +146,41 @@ public class UsersController : ControllerBase
     [HttpPut("{id:guid}/change-password")]
     public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordDTO changePasswordDto)
     {
-        _logger.LogInformation("Request received to put change password ", changePasswordDto , " on user by id: ", id);
-        var user = await _userService.GetUserById(id); // Retrieve the user
+        _logger.LogInformation("Change password request for user with ID {UserId}.", id);
+        var user = await _userService.GetUserById(id);
+
         if (user == null)
         {
+            _logger.LogWarning("User with ID {UserId} not found.", id);
             return NotFound("User not found.");
         }
 
-        // Verify current password
         if (!BCrypt.Net.BCrypt.Verify(changePasswordDto.CurrentPassword, user.PasswordHash))
         {
+            _logger.LogWarning("Incorrect current password for user with ID {UserId}.", id);
             return Unauthorized("Current password is incorrect.");
         }
 
-        // Prevent the new password from being the same as the current password
         if (BCrypt.Net.BCrypt.Verify(changePasswordDto.NewPassword, user.PasswordHash))
         {
+            _logger.LogWarning("New password matches the current password for user with ID {UserId}.", id);
             return BadRequest("New password cannot be the same as the current password.");
         }
 
-        // Check new password confirmation
         if (changePasswordDto.NewPassword != changePasswordDto.ConfirmNewPassword)
         {
+            _logger.LogWarning("Password confirmation mismatch for user with ID {UserId}.", id);
             return BadRequest("New password and confirmation do not match.");
         }
 
-        // Update the password
         var success = await _userService.UpdatePassword(id, changePasswordDto.NewPassword);
         if (!success)
         {
+            _logger.LogError("Failed to update password for user with ID {UserId}.", id);
             return StatusCode(500, "An error occurred while updating the password.");
         }
 
+        _logger.LogInformation("Password updated successfully for user with ID {UserId}.", id);
         return Ok("Password updated successfully.");
     }
     
@@ -180,46 +188,47 @@ public class UsersController : ControllerBase
     //[Authorize(Policy = "AdminPolicy")] // Ensure only admins can update roles
     public async Task<IActionResult> UpdateUserRole(Guid id, [FromBody] UserRoleUpdateDTO roleUpdateDto)
     {
-        _logger.LogInformation("Request received to update user role with DTO: {RoleUpdateDto} for user ID: {Id}", roleUpdateDto, id);
+        _logger.LogInformation("UpdateUserRole: Request to update role for user ID {UserId} to {NewRole}.", id, roleUpdateDto.Role);
 
-        // Check if the user exists
         var user = await _userService.GetUserById(id);
         if (user == null)
         {
+            _logger.LogWarning("UpdateUserRole: User with ID {UserId} not found.", id);
             return NotFound("User not found.");
         }
 
-        // Check if the new role is the same as the current role
         if (user.Role == roleUpdateDto.Role)
         {
+            _logger.LogInformation("UpdateUserRole: User with ID {UserId} already has the role {Role}. No changes made.", id, user.Role);
             return Ok("The role is already set to the specified value. No changes made.");
         }
 
-        // Proceed to update the role
         var success = await _userService.UpdateUserRole(id, roleUpdateDto);
 
         if (!success)
         {
+            _logger.LogError("UpdateUserRole: Failed to update role for user ID {UserId}.", id);
             return StatusCode(500, "An error occurred while updating the user role.");
         }
 
+        _logger.LogInformation("UpdateUserRole: Role for user ID {UserId} updated to {NewRole} successfully.", id, roleUpdateDto.Role);
         return Ok("User role updated successfully.");
-    }
+}
 
     [HttpGet("roles")]
     //[AllowAnonymous]
     public IActionResult GetUserRoles()
     {
-        _logger.LogInformation("Request received to get user roles");
+        _logger.LogInformation("GetUserRoles: Fetching all user roles.");
         var roles = new[] { UserRoles.Admin, UserRoles.Read, UserRoles.ReadWrite };
+        _logger.LogInformation("GetUserRoles: Successfully fetched {Count} roles.", roles.Length);
         return Ok(roles);
     }
 
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        _logger.LogInformation("Request received to log out");
-
+        _logger.LogInformation("Logout: User logged out successfully.");
         Response.Cookies.Delete("authToken");
         return Ok("Logged out successfully");
     }
@@ -227,22 +236,22 @@ public class UsersController : ControllerBase
     [HttpGet("{id:guid}/get-role")]
     public async Task<IActionResult> GetRole(Guid id)
     {
-        _logger.LogInformation("Request received to get role on user by id: {Id}", id);
+        _logger.LogInformation("GetRole: Attempt to fetch role for user ID {UserId}.", id);
 
         if (!HttpContext.User.Identity.IsAuthenticated)
         {
-            _logger.LogWarning("Unauthorized access attempt to GetRole.");
+            _logger.LogWarning("GetRole: Unauthorized access attempt to fetch role for user ID {UserId}.", id);
             return Unauthorized("User is not authenticated.");
         }
 
-        // Retrieve user by id
         var user = await _userService.GetUserById(id);
         if (user == null)
         {
-            _logger.LogInformation("User not found.");
+            _logger.LogWarning("GetRole: User with ID {UserId} not found.", id);
             return NotFound("User not found.");
         }
 
+        _logger.LogInformation("GetRole: Successfully fetched role for user ID {UserId}. Role: {Role}.", id, user.Role);
         return Ok(new { role = user.Role });
     }
 
@@ -250,6 +259,7 @@ public class UsersController : ControllerBase
     [Route("{*path}")]
     public IActionResult Options()
     {
+        _logger.LogInformation("Options: Preflight request received.");
         Response.Headers.Add("Access-Control-Allow-Origin", "http://localhost:3000");
         Response.Headers.Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT");
         Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -261,31 +271,31 @@ public class UsersController : ControllerBase
     [HttpGet("counts")]
     public async Task<IActionResult> GetUserCounts()
     {
+        _logger.LogInformation("GetUserCounts: Fetching user counts.");
         var total = await _userService.GetCountAsync();
-        var recent = await _userService.GetRecentCountAsync(TimeSpan.FromDays(30)); // Last 30 days
+        var recent = await _userService.GetRecentCountAsync(TimeSpan.FromDays(30));
+        _logger.LogInformation("GetUserCounts: Total users: {Total}, recent users (last 30 days): {Recent}.", total, recent);
         return Ok(new { total, recent });
     }
 
     [HttpGet("role-counts")]
     public async Task<IActionResult> GetRoleCounts()
     {
-        _logger.LogInformation("Request received to get counts of roles in the database.");
+        _logger.LogInformation("GetRoleCounts: Fetching role counts.");
 
-        // Get raw role counts
         var rawRoleCounts = await _userService.GetRoleCounts();
 
-        // Dynamically get role values from UserRoles class
         var roleValues = typeof(tree_form_API.Constants.UserRoles)
             .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
-            .Where(field => field.IsLiteral || field.IsInitOnly) // Ensure static readonly or constants
+            .Where(field => field.IsLiteral || field.IsInitOnly)
             .ToDictionary(field => field.Name, field => (string)field.GetValue(null));
 
-        // Map raw role keys to dynamically fetched values
         var roleCountsWithValues = rawRoleCounts.ToDictionary(
-            role => roleValues.ContainsKey(role.Key) ? roleValues[role.Key] : role.Key, // Use value if available
+            role => roleValues.ContainsKey(role.Key) ? roleValues[role.Key] : role.Key,
             role => role.Value
         );
 
+        _logger.LogInformation("GetRoleCounts: Successfully fetched role counts.");
         return Ok(roleCountsWithValues);
     }
 }
